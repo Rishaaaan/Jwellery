@@ -1,0 +1,1491 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Perfect Gift Finder</title>
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        html, body {
+            height: 100%;
+            overflow: hidden;
+            position: fixed;
+            width: 100%;
+            -webkit-overflow-scrolling: touch;
+        }
+
+        body {
+            font-family: 'Arial', sans-serif;
+            background: transparent;
+        }
+
+        .chat-container {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            padding: 0;
+/*            display: none;*/
+            opacity: 0;
+            background: rgba(0, 0, 0, 0.2);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            border: 1px solid rgb(215, 215, 215);
+            width: 100%;
+            max-width: 600px;
+            margin: 0 auto;
+            display: flex;
+            flex-direction: column;
+            height: 100%;
+            overflow: hidden;
+            border-radius: 25px;
+            transition: opacity 0.3s ease, transform 0.3s ease;
+            transform: translateX(0);
+        }
+
+        .chat-container.visible {
+            display: flex;
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        .chat-container.closing {
+            opacity: 0;
+            transform: translateX(100%);
+            pointer-events: none;
+        }
+
+        .messages-container {
+            flex: 1;
+            overflow-y: auto;
+            padding: 15px;
+            -webkit-overflow-scrolling: touch;
+        }
+
+        .messages-container::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        .messages-container::-webkit-scrollbar-track {
+            background: transparent;
+        }
+
+        .messages-container::-webkit-scrollbar-thumb {
+            background: rgba(255, 255, 255, 0.3);
+            border-radius: 3px;
+        }
+
+        .chat-message {
+            display: flex;
+            align-items: flex-start;
+            margin: 8px 16px;
+            opacity: 0;
+            transform: translateY(20px);
+            animation: smoothPopIn 0.4s ease forwards;
+        }
+
+        .chat-message.ai:not(.with-avatar) {
+            margin-left: 24px;
+        }
+
+        .chat-message.ai .message-content {
+            margin-left: 24px;
+        }
+
+        .avatar {
+            position: fixed;
+            left: -20px;
+        }
+
+        .chat-message.user {
+            flex-direction: row-reverse;
+            justify-content: flex-start;
+            margin-right: 0px;
+        }
+
+        .message-content {
+            max-width: 80%;
+            padding: 12px 16px;
+            border-radius: 20px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            font-size: 0.95rem;
+            line-height: 1.4;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .ai .message-content {
+            background: rgba(255, 255, 255, 0.9);
+            color: #333;
+            border-radius: 20px;
+            margin-right: 16px;
+        }
+
+        .user .message-content {
+            background: rgba(52, 152, 219, 0.9);
+            color: white;
+            border-radius: 20px;
+            margin-left: 10px;
+            margin-right: 10px;
+        }
+
+        .avatar {
+            width: 32px;
+            height: 32px;
+            min-width: 32px;
+            background: rgba(52, 152, 219, 0.9);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-right: 8px;
+        }
+
+        .avatar .material-icons {
+            color: white;
+            font-size: 18px;
+        }
+
+        .input-group {
+            padding: 10px;
+            background: rgba(255, 255, 255, 0.15);
+            border-top: 1px solid rgba(255, 255, 255, 0.2);
+            display: flex;
+            gap: 10px;
+            border-bottom-left-radius: 25px;
+            border-bottom-right-radius: 25px;
+        }
+
+        .input-box {
+            flex: 1;
+            padding: 15px 20px;
+            border: none;
+            border-radius: 25px;
+            font-size: 1rem;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+            background: rgba(255, 255, 255, 0.9);
+            transition: all 0.3s ease;
+        }
+
+        .input-box:focus {
+            outline: none;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+        }
+
+        .action-btn {
+            background: rgba(255, 255, 255, 0.9);
+            border: none;
+            width: 50px;
+            height: 50px;
+            border-radius: 25px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+            transition: all 0.3s ease;
+            flex-shrink: 0;
+        }
+
+        .action-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.2);
+        }
+
+        .material-icons {
+            color: #333;
+            font-size: 24px;
+        }
+
+        .options-container {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin-top: 4px;
+        }
+
+        .option-button {
+            background: rgba(255, 255, 255, 0.9);
+            border: 1px solid rgba(52, 152, 219, 0.3);
+            padding: 10px 20px;
+            border-radius: 20px;
+            cursor: pointer;
+            font-size: 0.95rem;
+            transition: all 0.3s ease;
+            color: #333;
+            width: 100%;
+            max-width: 400px;
+            height: 60px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .option-button:hover:not(:disabled) {
+            background: rgba(52, 152, 219, 0.9);
+            color: white;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+        }
+
+        .option-button:active:not(:disabled) {
+            transform: translateY(0);
+        }
+
+        .option-button.selected {
+            background: rgba(52, 152, 219, 0.9);
+            color: white;
+            pointer-events: none;
+        }
+
+        .option-button:disabled {
+            opacity: 0.7;
+            cursor: default;
+            pointer-events: none;
+        }
+
+        .options-container.answered {
+            pointer-events: none;
+        }
+
+        .category-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 12px;
+            width: 100%;
+            max-width: 400px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        .category-button {
+            display: flex;
+            align-items: center;
+            width: 100%;
+            height: 60px;
+            padding: 0 20px;
+            background-color: #ffffff;
+            border: 1px solid #e5e7eb;
+            border-radius: 12px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            color: inherit;
+            font-size: 16px;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+        }
+
+        .category-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        .category-button span {
+            margin-right: 12px;
+            font-size: 20px;
+            min-width: 24px;
+            text-align: center;
+        }
+
+        .category-button-text {
+            flex: 1;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .recommendation-item {
+            display: flex;
+            flex-direction: row;
+            background: white;
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+            transition: all 0.3s ease;
+            cursor: pointer;
+            width: 100%;
+            margin-bottom: 12px;
+            align-items: center;
+        }
+
+        .recommendation-item:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15);
+        }
+
+        .recommendation-image {
+            width: 120px;
+            height: 120px;
+            object-fit: cover;
+            flex-shrink: 0;
+        }
+
+        .recommendation-details {
+            padding: 12px;
+        }
+
+        .recommendation-title {
+            font-weight: bold;
+            margin-bottom: 4px;
+        }
+
+        .recommendation-description {
+            font-size: 0.85rem;
+            color: #666;
+            margin-bottom: 8px;
+        }
+
+        .recommendation-price {
+            font-weight: bold;
+            color: #3498db;
+        }
+
+        @keyframes pulse {
+            0% { transform: scale(1); box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2); }
+            50% { transform: scale(1.05); box-shadow: 0 8px 20px rgba(0, 0, 0, 0.3); }
+            100% { transform: scale(1); box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2); }
+        }
+
+        @keyframes smoothPopIn {
+            0% {
+                transform: translateY(20px);
+                opacity: 0;
+            }
+            100% {
+                transform: translateY(0);
+                opacity: 1;
+            }
+        }
+
+        .typing-indicator {
+            display: flex;
+            align-items: flex-start;
+            gap: 8px;
+            margin-bottom: 15px;
+            margin-left: 48px;
+            opacity: 0;
+            transform: translateY(20px);
+            animation: messagePopIn 0.3s ease forwards;
+        }
+
+        .typing-indicator .avatar {
+            background: rgba(0, 0, 0, 0);
+        }
+
+        .typing-indicator .avatar .material-icons {
+            color: rgba(255, 255, 255, 0);
+        }
+
+        .typing-dots {
+            display: flex;
+            gap: 4px;
+            padding: 12px 16px;
+            background: rgba(255, 255, 255, 0.9);
+            border-radius: 20px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        }
+
+        .typing-dot {
+            width: 6px;
+            height: 6px;
+            background: #333;
+            border-radius: 50%;
+            animation: typingBounce 1.4s infinite;
+            opacity: 0.7;
+        }
+
+        .typing-dot:nth-child(2) { animation-delay: 0.2s; }
+        .typing-dot:nth-child(3) { animation-delay: 0.4s; }
+
+        @keyframes typingBounce {
+            0%, 60%, 100% { transform: translateY(0); }
+            30% { transform: translateY(-4px); }
+        }
+
+        @keyframes messagePopIn {
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .message.user img {
+            max-width: 200px;
+            border-radius: 8px;
+            margin-top: 8px;
+            display: block;
+        }
+
+        .message.user.with-image {
+            background: rgba(52, 152, 219, 0.9);
+            color: #333;
+            border-radius: 18px 18px 18px 18px;
+            padding: 12px;
+            margin: 8px 8px 8px auto;
+            max-width: 250px;
+            box-shadow: 0 1px 2px rgba(0,0,0,0.1);
+        }
+
+        .message.user.with-image .message-text {
+            color: #333;
+            margin-bottom: 8px;
+            font-size: 0.95rem;
+        }
+
+        .image-container {
+            background: rgba(52, 152, 219, 0.9);
+            border-radius: 12px;
+            padding: 8px;
+            margin-top: 8px;
+            box-shadow: inset 0 0 0 1px rgba(0,0,0,0.05);
+        }
+
+        .message.user img {
+            max-width: 100%;
+            border-radius: 8px;
+            display: block;
+            width: 100%;
+            height: auto;
+        }
+
+        .image-loading {
+            width: 100%;
+            height: 3px;
+            background: rgba(255,255,255,0.1);
+            border-radius: 3px;
+            overflow: hidden;
+            margin-top: 8px;
+        }
+
+        .image-loading::after {
+            content: '';
+            display: block;
+            width: 40%;
+            height: 100%;
+            background: rgba(255,255,255,0.3);
+            animation: imageLoading 1s infinite ease-in-out;
+        }
+
+        @keyframes imageLoading {
+            0% { transform: translateX(-100%); }
+            100% { transform: translateX(250%); }
+        }
+
+        .analysis-animation {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.85);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 2002;
+            backdrop-filter: blur(8px);
+        }
+
+        .analysis-animation.active {
+            display: flex;
+        }
+
+        .magic-lamp {
+            width: 120px;
+            height: 120px;
+            position: relative;
+            transform-origin: bottom center;
+            animation: lampFloat 3s ease-in-out infinite;
+        }
+
+        .lamp-body {
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(45deg, #3498db, #2980b9);
+            border-radius: 50%;
+            position: relative;
+            overflow: hidden;
+            box-shadow: 0 0 30px rgba(52, 152, 219, 0.5);
+        }
+
+        .lamp-glow {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 80%;
+            height: 80%;
+            background: radial-gradient(circle, rgba(255,255,255,0.9), transparent);
+            transform: translate(-50%, -50%);
+            animation: lampGlow 2s ease-in-out infinite;
+        }
+
+        .particle {
+            position: absolute;
+            width: 4px;
+            height: 4px;
+            background: white;
+            border-radius: 50%;
+            pointer-events: none;
+            opacity: 0;
+        }
+
+        @keyframes lampFloat {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-20px); }
+        }
+
+        @keyframes lampGlow {
+            0%, 100% { opacity: 0.5; transform: translate(-50%, -50%) scale(1); }
+            50% { opacity: 1; transform: translate(-50%, -50%) scale(1.2); }
+        }
+
+        @keyframes particleFloat {
+            0% {
+                transform: translate(var(--startX), var(--startY)) scale(0);
+                opacity: 1;
+            }
+            100% {
+                transform: translate(var(--endX), var(--endY)) scale(0);
+                opacity: 0;
+            }
+        }
+
+        .analysis-text {
+            position: absolute;
+            bottom: 15%;
+            left: 0;
+            right: 0;
+            text-align: center;
+            color: white;
+            font-size: 1.2rem;
+            opacity: 0.9;
+        }
+
+        .message.ai .products-container {
+            background: #1e2a38;
+            border-radius: 18px;
+            padding: 16px;
+            margin-top: 12px;
+            color: white;
+        }
+
+        .product-card {
+            display: flex;
+            align-items: center;
+            padding: 12px;
+            background: rgba(44, 62, 80, 0.95);
+            border-radius: 12px;
+            margin-bottom: 10px;
+            transition: all 0.3s ease;
+        }
+
+        .product-card:hover {
+            background: rgba(52, 73, 94, 0.95);
+        }
+
+        .product-image {
+            width: 70px;
+            height: 70px;
+            border-radius: 8px;
+            object-fit: cover;
+            margin-right: 12px;
+            background: #2c3e50;
+        }
+
+        .product-info {
+            flex: 1;
+        }
+
+        .product-name {
+            font-size: 1.1rem;
+            font-weight: 500;
+            margin-bottom: 6px;
+            color: white;
+        }
+
+        .product-description {
+            font-size: 0.95rem;
+            color: rgba(255, 255, 255, 0.7);
+            line-height: 1.4;
+        }
+
+        .see-more-btn {
+            display: block;
+            width: 100%;
+            padding: 14px;
+            text-align: center;
+            background: rgba(44, 62, 80, 0.95);
+            border: none;
+            border-radius: 12px;
+            color: white;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin-top: 12px;
+        }
+
+        .see-more-btn:hover {
+            background: rgba(52, 73, 94, 0.95);
+        }
+
+        .products-title {
+            font-size: 1rem;
+            color: white;
+            margin-bottom: 16px;
+            line-height: 1.4;
+        }
+    </style>
+</head>
+<body>
+    <div class="chat-container">
+        <div class="messages-container">
+            <!-- Messages will be added here dynamically -->
+        </div>
+        <div class="input-group">
+            <input type="text" class="input-box" placeholder="Type your message...">
+            <button class="action-btn camera-btn">
+                <span class="material-icons">photo_camera</span>
+            </button>
+            <button class="action-btn send-btn">
+                <span class="material-icons">send</span>
+            </button>
+        </div>
+    </div>
+
+    <script>
+        const initialOptions = [
+            "👗 Find jewellery that suits your outfit",
+            "🎯 Get jewellery recommendations",
+            "❓ Ask a question",
+            "🏷️ Checkout offers"
+        ];
+
+        const shoeFromOutfitOptions = [
+            "📸 Upload Image",
+            "✍️ Do you want to describe your outfit?"
+        ];
+
+        const giftQuestions = [
+            {
+                text: "Hi there! 👋 I'm excited to help you find the perfect gift. First, could you tell me who this gift is for?",
+                options: [
+                    "For myself - I deserve something special! ✨",
+                    "For family - Showing them some love 💝",
+                    "For friends - Making them smile 🎁",
+                    "For someone special - A thoughtful surprise 💫"
+                ]
+            },
+            {
+                text: "Wonderful choice! And what's the occasion we're celebrating?",
+                options: [
+                    "Just because - Spreading joy! 🌟",
+                    "Birthday - Time to celebrate! 🎉",
+                    "Holiday - Making it special ⭐",
+                    "Thank you - Showing gratitude 💖",
+                    "Self-care - Taking a moment for myself 🧘‍♀️"
+                ]
+            },
+            {
+                text: "That's perfect! And what kind of personality are we shopping for?",
+                options: [
+                    "Cozy and relaxed - Loves comfort 🛋️",
+                    "Active and energetic - Always on the go! 🏃‍♀️",
+                    "Creative and artistic - Appreciates beauty 🎨",
+                    "Practical and organized - Values functionality ✓",
+                    "Luxurious - Enjoys the finer things ✨"
+                ]
+            },
+            {
+                text: "Great! And what's your budget range for this special gift?",
+                options: [
+                    "Under $500 - Something sweet 🎁",
+                    "$500-1000 - A thoughtful gift 💝",
+                    "$1000-2500 - Something special ✨",
+                    "Over $2500 - Going all out! 💫"
+                ]
+            }
+        ];
+
+        const shoeQuestions = [
+            {
+                text: "What type of jewellery are you looking for?",
+                options: [
+                    "Necklaces - Elegant statements 💎",
+                    "Rings - Timeless beauty 💍",
+                    "Bracelets - Stylish accents ✨",
+                    "Earrings - Perfect finishing touch 🌟"
+                ]
+            },
+            {
+                text: "What's your preferred style?",
+                options: [
+                    "Classic & Traditional - Timeless elegance 👑",
+                    "Modern & Contemporary - Fresh designs ✨",
+                    "Vintage & Antique - Nostalgic charm 🎭",
+                    "Minimalist & Simple - Subtle beauty ⚪"
+                ]
+            },
+            {
+                text: "What's most important to you in jewellery?",
+                options: [
+                    "Quality - Premium materials 💎",
+                    "Design - Unique aesthetics ✨",
+                    "Versatility - Everyday wear 🌟",
+                    "Value - Investment pieces 💰"
+                ]
+            }
+        ];
+
+        let userAnswers = [];
+        let currentQuestion = 0;
+        let currentQuestionSet = giftQuestions;
+        let isShowingGiftOptions = false;
+
+        function showGiftRecommendations() {
+            const recipient = userAnswers[0];
+            const occasion = userAnswers[1];
+            const personality = userAnswers[2];
+            const budget = userAnswers[3];
+            
+            addMessage("Based on your preferences, I've found some perfect jewellery pieces for you! ✨", 'ai');
+            
+            setTimeout(() => {
+                // Show product recommendations after the introductory message
+                showProductRecommendations();
+            }, 2000);
+            
+            // Chat ends here - no more questions or options
+        }
+        
+        function showShoeRecommendations() {
+            const shoeType = userAnswers[0];
+            const style = userAnswers[1];
+            const priority = userAnswers[2];
+
+            addMessage("Based on your preferences, I've found some perfect jewellery pieces for you! ✨", 'ai');
+
+            setTimeout(() => {
+                let recommendations = [];
+                if (shoeType.includes("Necklaces")) {
+                    recommendations.push("Diamond Pendant - Timeless elegance for any occasion - $1,299.99");
+                    recommendations.push("Pearl Necklace - Classic beauty that complements every look - $899.99");
+                } else if (shoeType.includes("Rings")) {
+                    recommendations.push("Diamond Solitaire - Elegant and traditional design - $2,499.99");
+                    recommendations.push("Gemstone Ring - Colorful and unique statement piece - $799.99");
+                } else if (shoeType.includes("Bracelets")) {
+                    recommendations.push("Gold Tennis Bracelet - Sophisticated choice for any event - $1,799.99");
+                    recommendations.push("Charm Bracelet - Personalized and meaningful design - $599.99");
+                } else if (shoeType.includes("Earrings")) {
+                    recommendations.push("Diamond Studs - Classic and versatile choice - $999.99");
+                    recommendations.push("Hoop Earrings - Modern and stylish design - $499.99");
+                }
+                addMessageWithOptions("Here are some recommendations based on your preferences:", recommendations);
+                // Chat ends here - no more questions or options
+            }, 1000);
+        }
+
+        function closeChat() {
+            const container = document.querySelector('.chat-container');
+            container.classList.add('closing');
+        }
+
+        function selectOption(option, button, container) {
+            // Mark selected option
+            const buttons = container.querySelectorAll('.option-button');
+            buttons.forEach(btn => {
+                btn.style.pointerEvents = 'none';
+                btn.style.opacity = '0.5';
+            });
+            button.style.opacity = '1';
+            button.style.backgroundColor = '#3498DB';
+            button.style.color = 'white';
+        
+            // Add user's selection as a message
+            addMessage(option, 'user');
+        
+            // Store the answer if we're in a question sequence
+            if (currentQuestionSet === giftQuestions || currentQuestionSet === shoeQuestions) {
+                userAnswers.push(option);
+            }
+        
+            // Handle initial menu options
+            if (option === "👗 Find jewellery that suits your outfit") {
+                setTimeout(() => {
+                    addMessageWithOptions("Great! Let's find the perfect jewellery to match your outfit.", shoeFromOutfitOptions);
+                }, 1000);
+                return; // Add return to prevent further execution
+            } 
+            else if (option === "📸 Upload Image") {
+                // Create and trigger hidden file input
+                const fileInput = document.createElement('input');
+                fileInput.type = 'file';
+                fileInput.accept = 'image/*';
+                fileInput.style.display = 'none';
+                document.body.appendChild(fileInput);
+
+                fileInput.onchange = function(e) {
+                    const file = e.target.files[0];
+                    if (file) {
+                        const reader = new FileReader();
+                        reader.onload = function(event) {
+                            // Add image message
+                            addImageMessage(event.target.result);
+                            
+                            // Show processing message
+                            addMessage("Processing your outfit...", 'ai');
+                            
+                            // Close chat interface and send message to parent
+                            setTimeout(() => {
+                                setTimeout(() => {
+                                    closeChat();
+                                }, 2000);
+                                // Wait for chat transition to complete before opening modal
+                                setTimeout(() => {
+                                    window.parent.postMessage({
+                                        type: 'openTryoutModal',
+                                        image: event.target.result
+                                    }, '*');
+                                }, 1000);
+                            }, 2000);
+                        };
+                        reader.readAsDataURL(file);
+                    }
+                    document.body.removeChild(fileInput);
+                };
+
+                fileInput.click();
+                return; // Add return to prevent further execution
+            }
+            else if (option === "✍️ Do you want to describe your outfit?") {
+                addMessage("Please describe what you're wearing or planning to wear:", 'ai');
+                // Enable text input for outfit description
+                document.querySelector('.input-box').placeholder = "Describe your outfit...";
+                document.querySelector('.input-box').dataset.mode = "outfit-description";
+                return; // Add return to prevent further execution
+            }
+            else if (option === "🧠 Smart shoe finder") {
+                addMessage("Let's help you find the perfect pair of shoes!", 'ai');
+                setTimeout(() => {
+                    currentQuestionSet = shoeQuestions;
+                    currentQuestion = 0;
+                    askNextQuestion();
+                }, 1000);
+            }
+            else if (option === "🎯 Get shoes recommendations") {
+                addMessage("I'll help you find the best shoes based on your preferences!", 'ai');
+                currentQuestionSet = shoeQuestions;
+                currentQuestion = 0;
+                setTimeout(() => {
+                    askNextQuestion();
+                }, 1000);
+                return; // Add return to prevent further execution
+            }
+            else if (option === "🏷️ Checkout offers") {
+                addMessage("Here are our current special offers:", 'ai');
+                setTimeout(() => {
+                    addMessage(`
+                        💎 Buy One Get One 50% OFF on selected jewellery pieces
+                        ✨ Free shipping on orders above ₹2999
+                        💍 15% discount on all diamond jewellery this week
+                        🎁 Complimentary gift box with purchases over ₹5000
+                    `, 'ai');
+                }, 1000);
+                return; // Add return to prevent further execution
+            }
+            else if (option === "❓ Ask a question") {
+                addMessage("Sure! I'm here to help. What would you like to know about our jewellery?", 'ai');
+                const inputBox = document.querySelector('.input-box');
+                inputBox.placeholder = "Type your question...";
+                inputBox.disabled = false;
+                inputBox.focus();
+                inputBox.dataset.mode = "question";
+                return;
+            }
+            else if (option === "💬 Chat on WhatsApp") {
+                window.open('https://wa.me/918333953605', '_blank');
+                return;
+            }
+            else if (option === "📞 Call us now") {
+                window.location.href = 'tel:+918333953605';
+                return;
+            }
+            // ... handle other existing options ...
+
+            // Add encouraging responses based on selection
+            const response = getResponseForSelection(option);
+            if (response) {
+                addMessage(response, 'ai');
+            }
+
+            if (isShowingGiftOptions) {
+                isShowingGiftOptions = false;
+                if (option.includes("Scented Candles")) {
+                    startShoeQuestions();
+                } else if (option === "Yes, show me candle options") {
+                    startShoeQuestions();
+                } else if (option === "No, I'll stick with my choice") {
+                    addMessage("No worries! I hope you found the perfect gift. Feel free to come back if you ever want to explore our candles! 🌟", 'ai');
+                } else {
+                    const giftType = option.split('-')[0].trim();
+                    addMessage(`${giftType}? That's a fantastic choice! You know what would make it even more special? A beautifully scented candle to go with it! Would you like to explore some options? 🕯️✨`, 'ai');
+                    setTimeout(() => {
+                        addMessageWithOptions("What do you think?", [
+                            "Yes, show me candle options",
+                            "No, I'll stick with my choice"
+                        ]);
+                        isShowingGiftOptions = true;
+                    }, 1000);
+                }
+                return;
+            }
+
+            // Only proceed with next question if we're in a question sequence
+            if (userAnswers.length > 0) {
+                setTimeout(() => {
+                    if (currentQuestion < currentQuestionSet.length - 1) {
+                        currentQuestion++;
+                        askNextQuestion();
+                    } else {
+                        if (currentQuestionSet === giftQuestions) {
+                            showGiftRecommendations();
+                        } else {
+                            getRecommendation();
+                        }
+                    }
+                }, 500);
+            }
+        }
+
+        function getResponseForSelection(option) {
+            // Extract the main choice without emojis and descriptions
+            const choice = option.split('-')[0].trim().split('(')[0].trim();
+
+            if (option.includes("Casual Sneakers")) {
+                return "Great choice! Casual sneakers are perfect for everyday style and comfort! 👟";
+            } else if (option.includes("Athletic Shoes")) {
+                return "Perfect for staying active and performing your best! 🏃‍♂️";
+            } else if (option.includes("Formal Shoes")) {
+                return "Excellent choice for a professional and polished look! 👔";
+            } else if (option.includes("Fashion Boots")) {
+                return "Love it! Let's find you some statement-making boots! 🥾";
+            }
+
+            // Return null if no specific response is needed
+            return null;
+        }
+
+        function startShoeQuestions() {
+            currentQuestionSet = shoeQuestions;
+            currentQuestion = 0;
+            userAnswers = [];
+            setTimeout(() => {
+                askNextQuestion();
+            }, 1000);
+        }
+
+        // Call showProductRecommendations after the chat is started
+        function startQuiz() {
+            document.querySelector('.chat-container').style.display = 'flex';
+            document.querySelector('.chat-container').classList.add('visible');
+            addMessage("Hello! 👋 I'm your AI shopping assistant. How can I help you today?", 'ai');
+            setTimeout(() => {
+                addMessageWithOptions("Choose an option:", initialOptions);
+                
+                // Show product recommendations after the initial greeting
+                setTimeout(() => {
+                    showProductRecommendations();
+                }, 1500);
+            }, 1000);
+        }
+
+        function showTypingIndicator() {
+            const messagesContainer = document.querySelector('.messages-container');
+            const existingIndicator = document.querySelector('.typing-indicator');
+            if (!existingIndicator) {
+                const indicatorDiv = document.createElement('div');
+                indicatorDiv.className = 'typing-indicator';
+
+                const avatar = document.createElement('div');
+                avatar.className = 'avatar';
+                const icon = document.createElement('span');
+                icon.className = 'material-icons';
+                icon.textContent = 'psychology';
+                avatar.appendChild(icon);
+                indicatorDiv.appendChild(avatar);
+
+                const dotsContainer = document.createElement('div');
+                dotsContainer.className = 'typing-dots';
+                for (let i = 0; i < 3; i++) {
+                    const dot = document.createElement('div');
+                    dot.className = 'typing-dot';
+                    dotsContainer.appendChild(dot);
+                }
+                indicatorDiv.appendChild(dotsContainer);
+
+                messagesContainer.appendChild(indicatorDiv);
+                messagesContainer.scrollTop = messagesContainer.scrollHeight;
+            }
+        }
+
+        function hideTypingIndicator() {
+            const typingIndicator = document.querySelector('.typing-indicator');
+            if (typingIndicator) {
+                typingIndicator.remove();
+            }
+        }
+
+        function addMessageWithOptions(text, options) {
+            const messagesContainer = document.querySelector('.messages-container');
+            const messageDiv = document.createElement('div');
+            messageDiv.className = 'chat-message ai';
+
+            // Only add avatar if last message was from user
+            const lastMessage = messagesContainer.lastElementChild;
+            if (!lastMessage || lastMessage.classList.contains('user')) {
+                const avatar = document.createElement('div');
+                avatar.className = 'avatar';
+                const icon = document.createElement('span');
+                icon.className = 'material-icons';
+                icon.textContent = 'psychology';
+                avatar.appendChild(icon);
+                messageDiv.appendChild(avatar);
+            }
+
+            const messageContent = document.createElement('div');
+            messageContent.className = 'message-content';
+
+            const questionText = document.createElement('div');
+            questionText.textContent = text;
+            messageContent.appendChild(questionText);
+
+            const optionsContainer = document.createElement('div');
+            optionsContainer.className = 'options-container';
+
+            options.forEach((option, index) => {
+                const button = document.createElement('button');
+                button.className = 'option-button';
+                button.textContent = option;
+                button.onclick = () => selectOption(option, button, optionsContainer);
+                optionsContainer.appendChild(button);
+            });
+
+            messageContent.appendChild(optionsContainer);
+            messageDiv.appendChild(messageContent);
+
+            messagesContainer.appendChild(messageDiv);
+            messagesContainer.scrollTop = messagesContainer.scrollHeight;
+        }
+
+        function addMessage(text, type) {
+            if (type === 'ai') {
+                showTypingIndicator();
+
+                setTimeout(() => {
+                    hideTypingIndicator();
+                    displayMessage(text, type);
+                }, 1000); // Delay for 1 second before showing the message
+            } else {
+                displayMessage(text, type);
+            }
+        }
+
+        function displayMessage(text, type) {
+            const messagesContainer = document.querySelector('.messages-container');
+            const messageDiv = document.createElement('div');
+            messageDiv.className = `chat-message ${type}`;
+
+            const messageContent = document.createElement('div');
+            messageContent.className = 'message-content';
+            messageContent.textContent = text;
+
+            if (type === 'ai') {
+                const lastMessage = messagesContainer.lastElementChild;
+                if (!lastMessage || lastMessage.classList.contains('user')) {
+                    const avatar = document.createElement('div');
+                    avatar.className = 'avatar';
+                    const icon = document.createElement('span');
+                    icon.className = 'material-icons';
+                    icon.textContent = 'psychology';
+                    avatar.appendChild(icon);
+                    messageDiv.appendChild(avatar);
+                }
+            }
+
+            messageDiv.appendChild(messageContent);
+            messagesContainer.appendChild(messageDiv);
+            messagesContainer.scrollTop = messagesContainer.scrollHeight;
+        }
+
+        function askNextQuestion() {
+            showTypingIndicator();
+            setTimeout(() => {
+                hideTypingIndicator();
+                const question = currentQuestionSet[currentQuestion];
+                if (typeof question.options === 'function') {
+                    const options = question.options();
+                    addMessageWithOptions(question.text, options);
+                } else {
+                    addMessageWithOptions(question.text, question.options);
+                }
+            }, 800);
+        }
+
+        function getRecommendation() {
+            const shoeType = userAnswers[4];    // First shoe question
+            const style = userAnswers[5];       // Second shoe question
+            const priority = userAnswers[6];    // Third shoe question
+
+            let recommendations = [];
+            showTypingIndicator();
+            setTimeout(() => {
+                hideTypingIndicator();
+
+                // Map recommendations based on user preferences
+                recommendations = generateShoeRecommendations(shoeType, style, priority);
+
+                const messageDiv = document.createElement('div');
+                messageDiv.className = 'chat-message ai';
+
+                const avatar = document.createElement('div');
+                avatar.className = 'avatar';
+                const icon = document.createElement('span');
+                icon.className = 'material-icons';
+                icon.textContent = 'psychology';
+                avatar.appendChild(icon);
+                messageDiv.appendChild(avatar);
+
+                const messageContent = document.createElement('div');
+                messageContent.className = 'message-content recommendations-container';
+
+                const questionText = document.createElement('div');
+                questionText.textContent = "Here are your perfect shoe matches! Want to see how they look on you? Try our virtual try-on feature! 🌟";
+                messageContent.appendChild(questionText);
+
+                const tryOnButton = document.createElement('button');
+                tryOnButton.className = 'option-button';
+                tryOnButton.textContent = "✨ Try Shoes Virtually";
+                tryOnButton.onclick = () => {
+                    // Redirect to product page with try-on parameter
+                    window.parent.location.href = 'product.html?id=running-pro&tryOn=true';
+                };
+                messageContent.appendChild(tryOnButton);
+
+                const optionsContainer = document.createElement('div');
+                optionsContainer.className = 'options-container';
+
+                recommendations.forEach(rec => {
+                    const recItem = document.createElement('div');
+                    recItem.className = 'recommendation-item';
+                    recItem.innerHTML = `
+                        <img src="${rec.image}" alt="${rec.title}" class="recommendation-image">
+                        <div class="recommendation-details">
+                            <div class="recommendation-title">${rec.title}</div>
+                            <div class="recommendation-description">${rec.description}</div>
+                            <div class="recommendation-price">${rec.price}</div>
+                        </div>
+                    `;
+
+                    recItem.addEventListener('click', () => {
+                        window.parent.location.href = `product.html?id=running-pro`;
+                    });
+
+                    optionsContainer.appendChild(recItem);
+                });
+
+                messageContent.appendChild(optionsContainer);
+                messageDiv.appendChild(messageContent);
+
+                document.querySelector('.messages-container').appendChild(messageDiv);
+                document.querySelector('.messages-container').scrollTop = document.querySelector('.messages-container').scrollHeight;
+            }, 800);
+        }
+
+        function generateShoeRecommendations(shoeType, style, priority) {
+            const recommendations = [
+                {
+                    id: 'casual-sneaker-01',
+                    image: "images/1.webp",
+                    title: "Urban Comfort Sneakers",
+                    description: "Perfect blend of style and comfort for everyday wear",
+                    price: "$89.99"
+                },
+                {
+                    id: 'athletic-shoe-02',
+                    image: "images/2.webp",
+                    title: "Performance Runner Pro",
+                    description: "Engineered for maximum performance and durability",
+                    price: "$129.99"
+                },
+                {
+                    id: 'fashion-boot-03',
+                    image: "images/3.webp",
+                    title: "Trendsetter Boots",
+                    description: "Make a statement with these designer boots",
+                    price: "$159.99"
+                }
+            ];
+
+            return recommendations;
+        }
+
+        // Listen for message from parent window
+        window.addEventListener('message', function(event) {
+            if (event.data === 'startChat') {
+                startQuiz();
+            }
+        });
+
+        // Get references to the input box and send button
+        const inputBox = document.querySelector('.input-box');
+        const sendButton = document.querySelector('.send-btn');
+
+        // Function to send the message
+        function sendMessage() {
+            const inputBox = document.querySelector('.input-box');
+            const message = inputBox.value.trim();
+            
+            if (message && inputBox.dataset.mode === "outfit-description") {
+                addMessage(message, 'user');
+                inputBox.value = '';
+                delete inputBox.dataset.mode;
+                
+                // Show processing message
+                addMessage("Analyzing your outfit description...", 'ai');
+                
+                // Close chat interface and send message to parent
+                setTimeout(() => {
+                    closeChat();
+                    // Wait for chat transition to complete before opening modal
+                    setTimeout(() => {
+                        window.parent.postMessage({
+                            type: 'openTryoutModal',
+                            description: message
+                        }, '*');
+                    }, 300);
+                }, 2000);
+            } else if (message) {
+                addMessage(message, 'user');
+                inputBox.value = '';
+
+                if (inputBox.dataset.mode === "question") {
+                    const messageLower = message.toLowerCase();
+                    
+                    setTimeout(() => {
+                        let response;
+                        if (messageLower.includes('size') || messageLower.includes('fit')) {
+                            response = "Our jewellery is available in various sizes. For the most accurate fit, we recommend checking our size guide or contacting our customer service team.";
+                        } else if (messageLower.includes('delivery') || messageLower.includes('shipping')) {
+                            response = "We offer free shipping on orders over ₹2999! Standard delivery takes 3-5 business days, and express delivery is available for an additional fee.";
+                        } else if (messageLower.includes('return') || messageLower.includes('exchange')) {
+                            response = "We have a hassle-free 30-day return policy. If you're not satisfied with your purchase, you can return it for a full refund or exchange.";
+                        } else if (messageLower.includes('material') || messageLower.includes('quality')) {
+                            response = "Our jewellery is crafted with the finest materials including genuine diamonds, precious metals, and authentic gemstones. Each piece undergoes strict quality control.";
+                        } else {
+                            addMessage("Thats a great question! and we are committed to providing you with the best assistance possible. Our team will carefully review your question and get back to you shortly. For immediate support, please choose one of the following options:", 'ai');
+                            
+                            setTimeout(() => {
+                                addMessageWithOptions("", [
+                                    "💬 Chat on WhatsApp",
+                                    "📞 Call us now"
+                                ]);
+                            }, 1000);
+                            return;
+                        }
+                        
+                        addMessage(response, 'ai');
+                    }, 1000);
+                }
+            }
+        }
+
+        // Event listener for the "Enter" key press
+        inputBox.addEventListener('keydown', function(event) {
+            if (event.key === 'Enter') {
+                event.preventDefault(); // Prevent the default behavior of the Enter key
+                sendMessage(); // Call the function to send the message
+            }
+        });
+
+        // Event listener for the "Send" button click
+        sendButton.addEventListener('click', function() {
+            sendMessage(); // Call the function to send the message
+        });
+
+        // Add new function to handle image messages
+        function addImageMessage(imageUrl) {
+            const messagesContainer = document.querySelector('.messages-container');
+            const messageDiv = document.createElement('div');
+            messageDiv.className = 'chat-message user';
+
+            const messageContent = document.createElement('div');
+            messageContent.className = 'message-content';
+
+            const img = document.createElement('img');
+            img.src = imageUrl;
+            img.alt = "Uploaded outfit";
+            messageContent.appendChild(img);
+
+            messageDiv.appendChild(messageContent);
+            messagesContainer.appendChild(messageDiv);
+            messagesContainer.scrollTop = messagesContainer.scrollHeight;
+        }
+
+        // Product recommendations section
+        function showProductRecommendations() {
+            const messagesContainer = document.querySelector('.messages-container');
+            const messageDiv = document.createElement('div');
+            messageDiv.className = 'chat-message ai with-avatar';
+
+            const avatar = document.createElement('div');
+            avatar.className = 'avatar';
+            avatar.innerHTML = '<span class="material-icons">shopping_bag</span>';
+            messageDiv.appendChild(avatar);
+
+            const messageContent = document.createElement('div');
+            messageContent.className = 'message-content';
+
+            messageContent.innerHTML = `
+                <div>Here are some beautiful jewellery pieces you might love:</div>
+            `;
+
+            const recommendationsContainer = document.createElement('div');
+            recommendationsContainer.className = 'recommendations-container';
+
+            // Get products from store.html - using the same product data
+            const products = [
+                {
+                    id: 'diamond-necklace',
+                    title: 'Royal Diamond Necklace',
+                    description: 'Exquisite handcrafted diamond necklace with 24K gold chain',
+                    price: 24999.99,
+                    image: 'https://images.unsplash.com/photo-1599643478518-a784e5dc4c8f?w=500'
+                },
+                {
+                    id: 'pearl-earrings',
+                    title: 'Elegant Pearl Earrings',
+                    description: 'Premium cultured pearl earrings with sterling silver settings',
+                    price: 7499.99,
+                    image: 'https://encrypted-tbn3.gstatic.com/shopping?q=tbn:ANd9GcSRFefqAsJ4SQpUfUJ-FrsPxE3lphhrz_xKzCghvycU5LIPtlHHpULLeBrNxDdQZ3ka2kIFuYabecaaMfdaR_grcc6mnH1EAGr7rLk-zgSU'
+                },
+                {
+                    id: 'gold-bracelet',
+                    title: 'Classic Gold Bracelet',
+                    description: 'Timeless 18K gold bracelet with intricate detailing',
+                    price: 12999.99,
+                    image: 'https://images.unsplash.com/photo-1611591437281-460bfbe1220a?w=500'
+                },
+                {
+                    id: 'sapphire-ring',
+                    title: 'Sapphire Engagement Ring',
+                    description: 'Stunning sapphire center stone with diamond halo',
+                    price: 18499.99,
+                    image: 'https://images.unsplash.com/photo-1605100804763-247f67b3557e?w=500'
+                }
+            ];
+
+            products.forEach(product => {
+                const recItem = document.createElement('div');
+                recItem.className = 'recommendation-item';
+                recItem.innerHTML = `
+                    <img src="${product.image}" alt="${product.title}" class="recommendation-image">
+                    <div class="recommendation-details">
+                        <div class="recommendation-title">${product.title}</div>
+                        <div class="recommendation-description">${product.description}</div>
+                        <div class="recommendation-price">₹${product.price.toFixed(2)}</div>
+                    </div>
+                `;
+
+                recItem.addEventListener('click', () => {
+                    // Redirect to product page and trigger try-on functionality
+                    window.parent.location.href = `product.html?id=${product.id}&tryOn=true`;
+                });
+
+                recommendationsContainer.appendChild(recItem);
+            });
+
+            messageContent.appendChild(recommendationsContainer);
+            messageDiv.appendChild(messageContent);
+
+            messagesContainer.appendChild(messageDiv);
+            messagesContainer.scrollTop = messagesContainer.scrollHeight;
+            
+            // Add a small delay before closing the chat to allow user to see recommendations
+            setTimeout(() => {
+                // Optional: Add a closing message
+                addMessage("Thank you for using our Perfect Gift Finder! Click on any item to view more details.", 'ai');
+            }, 2000);
+        }
+
+        // Add CSS for product recommendations
+        document.head.insertAdjacentHTML('beforeend', `
+            <style>
+                .recommendations-container {
+                    display: flex;
+                    flex-direction: column;
+                    gap: 15px;
+                    margin-top: 10px;
+                    max-width: 100%;
+                }
+                .recommendation-item {
+                    display: flex;
+                    align-items: center;
+                    gap: 15px;
+                    padding: 10px;
+                    background: rgba(255, 255, 255, 0.1);
+                    border-radius: 10px;
+                    transition: all 0.3s ease;
+                    cursor: pointer;
+                }
+                .recommendation-item:hover {
+                    background: rgba(255, 255, 255, 0.2);
+                    transform: translateY(-2px);
+                }
+                .recommendation-image {
+                    width: 80px;
+                    height: 80px;
+                    border-radius: 8px;
+                    object-fit: cover;
+                }
+                .recommendation-details {
+                    flex: 1;
+                }
+                .recommendation-title {
+                    font-size: 1em;
+                    font-weight: bold;
+                    margin-bottom: 5px;
+                }
+                .recommendation-description {
+                    font-size: 0.8em;
+                    margin-bottom: 5px;
+                    display: -webkit-box;
+                    -webkit-line-clamp: 2;
+                    -webkit-box-orient: vertical;
+                    overflow: hidden;
+                }
+                .recommendation-price {
+                    font-size: 0.9em;
+                    font-weight: bold;
+                }
+            </style>
+        `);
+
+        // Call showProductRecommendations after the chat is started
+        function startQuiz() {
+            document.querySelector('.chat-container').style.display = 'flex';
+            document.querySelector('.chat-container').classList.add('visible');
+            addMessage("Hello! 👋 I'm your AI shopping assistant. How can I help you today?", 'ai');
+            setTimeout(() => {
+                addMessageWithOptions("Choose an option:", initialOptions);
+            }, 1000);
+        }
+    </script>
+</body>
+</html>

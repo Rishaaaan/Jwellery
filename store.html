@@ -1,0 +1,1401 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Jewellery Store</title>
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+        }
+
+        body {
+            background: #f8fafc;
+            color: #334155;
+            min-height: 100vh;
+        }
+
+        .header {
+            background: white;
+            padding: 0.5rem 1rem;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+        }
+
+        .announcement-bar {
+            background: linear-gradient(45deg, #0ea5e9, #3b82f6);
+            color: white;
+            text-align: center;
+            padding: 0.75rem 1rem;
+            font-weight: 500;
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            transform: translateY(-100%);
+            transition: all 0.8s cubic-bezier(0.16, 1, 0.3, 1);
+            z-index: 1001;
+        }
+
+        .announcement-bar.show {
+            position: relative;
+            transform: translateY(0);
+        }
+
+        .announcement-content {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+        }
+
+        .announcement-bar .highlight {
+            color: #fef08a;
+            font-weight: 600;
+        }
+
+        .announcement-bar .close-announcement {
+            position: absolute;
+            right: 1rem;
+            top: 50%;
+            transform: translateY(-50%);
+            background: none;
+            border: none;
+            color: white;
+            cursor: pointer;
+            padding: 0.25rem;
+            font-size: 1.25rem;
+            opacity: 0.8;
+            transition: all 0.3s ease;
+            width: 24px;
+            height: 24px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 50%;
+        }
+
+        .announcement-bar .close-announcement:hover {
+            opacity: 1;
+            background: rgba(255, 255, 255, 0.1);
+        }
+
+        .header-content {
+            max-width: 1200px;
+            margin: 0 auto;
+            display: grid;
+            grid-template-columns: auto 1fr auto;
+            gap: 2rem;
+            align-items: center;
+            padding: 0.5rem;
+        }
+
+        .logo {
+            font-size: 1.5rem;
+            font-weight: 600;
+            color: #0f172a;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            text-decoration: none;
+        }
+
+        .logo span {
+            color: #0ea5e9;
+        }
+
+        .search-bar {
+            position: relative;
+            max-width: 500px;
+            width: 100%;
+        }
+
+        .search-input {
+            width: 100%;
+            padding: 0.75rem 1rem 0.75rem 2.5rem;
+            border: 1px solid #e2e8f0;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            transition: border-color 0.2s;
+        }
+
+        .search-input:focus {
+            outline: none;
+            border-color: #0ea5e9;
+        }
+
+        .search-icon {
+            position: absolute;
+            left: 1rem;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #64748b;
+        }
+
+        .nav-links {
+            display: flex;
+            gap: 1.5rem;
+            align-items: center;
+        }
+
+        .nav-link {
+            color: #64748b;
+            text-decoration: none;
+            font-weight: 500;
+            transition: color 0.2s;
+            display: flex;
+            align-items: center;
+            gap: 0.25rem;
+        }
+
+        .nav-link:hover {
+            color: #0ea5e9;
+        }
+
+        .cart-count {
+            background: #ef4444;
+            color: white;
+            padding: 0.25rem 0.5rem;
+            border-radius: 999px;
+            font-size: 0.75rem;
+        }
+
+        .categories-menu {
+            position: absolute;
+            top: 100%;
+            left: 0;
+            background: white;
+            border-radius: 0.5rem;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+            padding: 1rem;
+            min-width: 200px;
+            display: none;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 1rem;
+        }
+
+        .nav-link:hover .categories-menu {
+            display: grid;
+        }
+
+        .category-item {
+            color: #64748b;
+            text-decoration: none;
+            padding: 0.5rem;
+            border-radius: 0.25rem;
+            transition: background-color 0.2s;
+        }
+
+        .category-item:hover {
+            background: #f1f5f9;
+            color: #0ea5e9;
+        }
+
+        .main-content {
+            max-width: 1200px;
+            margin: 2rem auto;
+            padding: 0 1rem;
+        }
+
+        .hero {
+            position: relative;
+            color: white;
+            padding: 4rem 1rem;
+            margin-bottom: 3rem;
+            border-radius: 1rem;
+            text-align: center;
+            overflow: hidden;
+        }
+
+        .video-background {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 0;
+        }
+
+        .video-background video {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .video-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 1;
+        }
+
+        .hero-content {
+            position: relative;
+            z-index: 2;
+        }
+
+        .hero h1 {
+            font-size: 2.5rem;
+            margin-bottom: 1rem;
+            font-weight: 700;
+        }
+
+        .hero p {
+            font-size: 1.1rem;
+            opacity: 0.9;
+            max-width: 600px;
+            margin: 0 auto;
+        }
+
+        .products-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 2rem;
+            padding: 1rem 0;
+        }
+
+        .product-card {
+            background: white;
+            border-radius: 1rem;
+            padding: 1rem;
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            transition: all 0.3s ease;
+        }
+
+        .product-image-container {
+            position: relative;
+            width: 100%;
+            padding-top: 100%; /* 1:1 Aspect Ratio */
+            overflow: hidden;
+            border-radius: 0.5rem;
+        }
+
+        .product-image {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            transition: transform 0.3s ease;
+        }
+
+        .product-card:hover .product-image {
+            transform: scale(1.05);
+        }
+
+        .product-description {
+            color: #64748b;
+            font-size: 0.9rem;
+            margin: 0.5rem 0;
+        }
+
+        .product-title {
+            color: #0f172a;
+            margin-bottom: 0.5rem;
+            margin-top: 20px;
+            font-size: 1.4rem;
+        }
+
+        .product-price {
+            color: black;
+            font-weight: bold;
+            margin-bottom: 1rem;
+            font-size: 1.2rem;
+        }
+
+        .add-to-cart {
+            width: 100%;
+            background: #0ea5e9;
+            color: white;
+            border: none;
+            border-radius: 0.25rem;
+            padding: 0.5rem;
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
+
+        .add-to-cart:hover {
+            background: #0284c7;
+        }
+
+        .chat-button {
+            position: fixed;
+            bottom: 2rem;
+            right: 2rem;
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            background: #0ea5e9;
+            color: white;
+            border: none;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            z-index: 1000;
+            animation: pulse 2s infinite;
+        }
+
+        .chat-button .icon-default,
+        .chat-button .icon-open {
+            position: absolute;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .chat-button .icon-default {
+            opacity: 1;
+            transform: rotate(0deg);
+        }
+
+        .chat-button .icon-open {
+            opacity: 0;
+            transform: rotate(-180deg);
+        }
+
+        .chat-button.open {
+            animation: none;
+            background: #dc2626;
+        }
+
+        .chat-button.open .icon-default {
+            opacity: 0;
+            transform: rotate(180deg);
+        }
+
+        .chat-button.open .icon-open {
+            opacity: 1;
+            transform: rotate(0deg);
+        }
+
+        .chat-button:hover {
+            transform: scale(1.05);
+            background: #0284c7;
+        }
+
+        .chat-button.open:hover {
+            background: #b91c1c;
+        }
+        .notification-badge {
+    position: absolute;
+    top: 8px;
+    left: -8px;
+    background-color: #ef4444;
+    color: white;
+    border-radius: 50%;
+    width: 24px;
+    height: 24px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 14px;
+    opacity: 0;
+    transform: translateY(-50%) scale(0.8);
+    transition: all 0.3s ease;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+.notification-badge.show {
+    opacity: 1;
+    transform: translateY(-50%) scale(1);
+}
+        .reset-button {
+            position: fixed;
+            bottom: 2rem;
+            right: calc(2rem + 70px);
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            background: #ef4444;
+            color: white;
+            border: none;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            z-index: 1000;
+            opacity: 0;
+            transform: translateX(50px);
+            pointer-events: none;
+        }
+
+        .reset-button.visible {
+            opacity: 1;
+            transform: translateX(0);
+            pointer-events: auto;
+        }
+
+        .reset-button:hover {
+            background: #dc2626;
+            transform: scale(1.05) translateX(0);
+        }
+
+        .chat-button:hover {
+            transform: scale(1.05);
+            background: #0284c7;
+        }
+
+        .reset-button .material-icons {
+            transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .reset-button:hover .material-icons {
+            transform: rotate(180deg);
+        }
+
+        .chat-interface {
+            position: fixed;
+            bottom: 6rem;
+            right: 2rem;
+            width: 400px;
+            height: 600px;
+            background: white;
+            border-radius: 1rem;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            transform: translateY(100%);
+            opacity: 0;
+            transition: all 0.3s ease;
+            z-index: 999;
+            overflow: hidden;
+        }
+
+        #chat-interface {
+            position: fixed;
+            bottom: 90px;
+            right: -800px;
+            width: 600px;
+            height: calc(100% - 125px);
+            background: transparent;
+            transition: right 0.3s ease;
+            z-index: 1001;
+            border-radius: 25px;
+            margin-right: 24px;
+            margin-bottom: 16px;
+        }
+
+        #chat-interface.open {
+            right: 0;
+        }
+
+        @keyframes pulse {
+            0% {
+                box-shadow: 0 0 0 0 rgba(14, 165, 233, 0.7);
+            }
+            70% {
+                box-shadow: 0 0 0 15px rgba(14, 165, 233, 0);
+            }
+            100% {
+                box-shadow: 0 0 0 0 rgba(14, 165, 233, 0);
+            }
+        }
+
+        @media (max-width: 768px) {
+            .header-content {
+                grid-template-columns: auto auto;
+            }
+
+            .search-bar {
+                grid-column: 1 / -1;
+                order: 3;
+            }
+
+            .nav-links {
+                gap: 1rem;
+            }
+
+            .nav-links {
+                display: none;
+            }
+
+            .hero {
+                padding: 3rem 1rem;
+            }
+
+            .hero h1 {
+                font-size: 2rem;
+            }
+
+            .products-grid {
+                grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+                gap: 1.5rem;
+            }
+
+            #chat-interface {
+                width: 100%;
+                right: -100%;
+                margin: 0;
+                height: calc(100% - 80px);
+                border-radius: 0;
+            }
+        }
+
+        @keyframes highlightProduct {
+            0% { transform: scale(1); box-shadow: 0 0 0 rgba(14, 165, 233, 0); }
+            50% { transform: scale(1.05); box-shadow: 0 0 20px rgba(14, 165, 233, 0.3); }
+            100% { transform: scale(1); box-shadow: 0 0 0 rgba(14, 165, 233, 0); }
+        }
+
+        .highlight-product {
+            animation: highlightProduct 2s ease-out;
+        }
+
+        .modal-backdrop {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.8);
+            z-index: 2000;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+
+        .modal-backdrop.active {
+            display: flex;
+            opacity: 1;
+        }
+
+        .tryout-init, .tryout-main {
+            background: white;
+            border-radius: 20px;
+            padding: 2rem;
+            margin: auto;
+            position: relative;
+            width: 90%;
+            max-width: 1200px;
+            opacity: 0;
+            transform: translateY(20px);
+            transition: all 0.3s ease;
+        }
+
+        .tryout-main {
+            display: none;
+            height: 80vh;
+            flex-direction: row;
+            gap: 2rem;
+            padding: 1.5rem;
+        }
+
+        .tryout-main.active {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        .tryout-left {
+            flex: 2;
+            position: relative;
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+        }
+
+        .tryout-right {
+            flex: 1;
+            background: #f8fafc;
+            border-radius: 15px;
+            padding: 1rem;
+            overflow-y: auto;
+        }
+
+        .main-preview {
+            flex: 1;
+            position: relative;
+            background: #f8fafc;
+            border-radius: 15px;
+            overflow: hidden;
+        }
+
+        .main-preview img {
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+        }
+
+        .preview-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(80px, 1fr));
+            gap: 1rem;
+            padding: 1rem 0;
+        }
+
+        .preview-thumb {
+            aspect-ratio: 1;
+            border-radius: 10px;
+            overflow: hidden;
+            cursor: pointer;
+            border: 2px solid transparent;
+            transition: all 0.3s ease;
+        }
+
+        .preview-thumb.active {
+            border-color: #0ea5e9;
+        }
+
+        .preview-thumb img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .loading-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(255, 255, 255, 0.9);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.3s ease;
+        }
+
+        .loading-overlay.active {
+            opacity: 1;
+            pointer-events: auto;
+        }
+
+        .loader-container {
+            display: flex;
+            gap: 8px;
+        }
+
+        .loader-container span {
+            width: 12px;
+            height: 12px;
+            background: #0ea5e9;
+            border-radius: 50%;
+            animation: bounce 0.5s alternate infinite;
+        }
+
+        .loader-container span:nth-child(2) { animation-delay: 0.1s; }
+        .loader-container span:nth-child(3) { animation-delay: 0.2s; }
+        .loader-container span:nth-child(4) { animation-delay: 0.3s; }
+
+        @keyframes bounce {
+            to { transform: translateY(-10px); }
+        }
+
+        .modal-close {
+            position: absolute;
+            top: 1rem;
+            right: 1rem;
+            background: none;
+            border: none;
+            color: #64748b;
+            cursor: pointer;
+            padding: 0.5rem;
+            border-radius: 50%;
+            transition: all 0.3s ease;
+        }
+
+        .modal-close:hover {
+            background: #f1f5f9;
+            color: #0f172a;
+        }
+
+        .similar-list {
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+            padding: 1rem 0;
+        }
+
+        .similar-product {
+            background: white;
+            border-radius: 12px;
+            padding: 1rem;
+            display: flex;
+            gap: 1rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .similar-product:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        .similar-product img {
+            width: 80px;
+            height: 80px;
+            object-fit: cover;
+            border-radius: 8px;
+        }
+
+        .similar-product-info {
+            flex: 1;
+        }
+
+        .similar-product-title {
+            font-weight: 600;
+            color: #0f172a;
+            margin-bottom: 0.25rem;
+        }
+
+        .similar-product-price {
+            color: #0ea5e9;
+            font-weight: 500;
+        }
+
+        .similar-product-description {
+            font-size: 0.875rem;
+            color: #64748b;
+            margin-top: 0.25rem;
+        }
+
+        .tryout-right h3 {
+            padding: 0 1rem;
+            margin-bottom: 0.5rem;
+            color: #0f172a;
+        }
+
+        .current-product {
+            background: white;
+            border-radius: 12px;
+            padding: 1rem;
+            margin-bottom: 1.5rem;
+            border: 2px solid #0ea5e9;
+        }
+
+        .current-product-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 0.5rem;
+        }
+
+        .current-status {
+            font-size: 0.875rem;
+            color: #0ea5e9;
+            font-weight: 500;
+            display: flex;
+            align-items: center;
+            gap: 0.25rem;
+        }
+
+        .product-actions {
+            display: flex;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .product-action-btn {
+            padding: 0.5rem 1rem;
+            border-radius: 8px;
+            font-size: 0.875rem;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            display: flex;
+            align-items: center;
+            gap: 0.25rem;
+        }
+
+        .view-product {
+            background: #0ea5e9;
+            color: white;
+            border: none;
+            flex: 2;
+        }
+
+        .view-product:hover {
+            background: #0284c7;
+        }
+
+        .open-new-tab {
+            background: white;
+            border: 1px solid #e2e8f0;
+            color: #64748b;
+            flex: 1;
+        }
+
+        .open-new-tab:hover {
+            background: #f8fafc;
+            color: #0ea5e9;
+        }
+
+        .tryout-right h3 {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            color: #0f172a;
+            margin-bottom: 1rem;
+        }
+
+        .tryout-right h3 .count {
+            font-size: 0.875rem;
+            color: #64748b;
+            font-weight: normal;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <div class="announcement-bar">
+            <div class="announcement-content">
+                <span>💎</span> Free shipping on orders over <span class="highlight">₹2999!</span> Limited time offer
+            </div>
+            <button class="close-announcement" onclick="closeAnnouncement()">×</button>
+        </div>
+        <div class="header">
+            <div class="header-content">
+                <a href="store.html" class="logo">
+                    <span></span>💍 Jewellery Haven
+                </a>
+                
+                <div class="search-bar">
+                    <span class="material-icons search-icon">search</span>
+                    <input type="text" class="search-input" placeholder="Search for necklaces, rings, and more...">
+                </div>
+
+                <nav class="nav-links">
+                    <a href="#" class="nav-link">
+                        Home
+                    </a>
+                    <a href="#" class="nav-link" style="position: relative;">
+                        Categories <span class="material-icons" style="font-size: 1rem;">expand_more</span>
+                        <div class="categories-menu">
+                            <a href="#" class="category-item">Necklaces</a>
+                            <a href="#" class="category-item">Bracelets</a>
+                            <a href="#" class="category-item">Earrings</a>
+                            <a href="#" class="category-item">Rings</a>
+                            <a href="#" class="category-item">Pendants</a>
+                            <a href="#" class="category-item">New Collections</a>
+                            <a href="#" class="category-item">Best Sellers</a>
+                            <a href="#" class="category-item">Special Offers</a>
+                        </div>
+                    </a>
+                    <a href="#" class="nav-link">About</a>
+                    <a href="cart.html" class="nav-link">
+                        <span class="material-icons">shopping_cart</span>
+                        Cart <span class="cart-count">0</span>
+                    </a>
+                </nav>
+            </div>
+        </div>
+    </header>
+
+    <div class="main-content">
+        <section class="hero">
+            <div class="video-background">
+                <video id="bgVideo" autoplay muted playsinline>
+                    <source src="https://videos.pexels.com/video-files/5106444/5106444-hd_1920_1080_25fps.mp4" type="video/mp4">
+                </video>
+                <div class="video-overlay"></div>
+            </div>
+            <script>
+                const videoUrls = [
+                    'https://videos.pexels.com/video-files/5106444/5106444-hd_1920_1080_25fps.mp4',
+                    'https://media.istockphoto.com/id/1074133630/video/beautiful-wedding-ring-and-engagement-ring-4k.mp4?s=mp4-640x640-is&k=20&c=ZneS1xLaoT9u3fpHlxiHFiB4sTXhSf78U2eOD7IGmOw=',
+                    'https://media.istockphoto.com/id/1350919174/video/bride-wear-beautiful-earrings.mp4?s=mp4-640x640-is&k=20&c=3VshDdPJAMUskcntDA-CJIR_rVlwhU_Dkh-e-w-ZnjA=',
+                    'https://media.istockphoto.com/id/1157433618/video/dolly-right-camera-of-ancient-golden-jewelry-and-accessories-with-gemstones-of-traditional.mp4?s=mp4-640x640-is&k=20&c=eMl5f0AZvivxZPap_Esr14saICl8px2akXPOdYGkgEY=',
+                    'https://media.istockphoto.com/id/1008636948/video/female-holding-chain-with-small-pendant-jewelry-store-precious-stone-gift.mp4?s=mp4-640x640-is&k=20&c=E7hXHdvliBqKhFRG8FTQFO6UYJ2Ds3BCj67dLYqoj_k='
+                ];
+                let currentVideoIndex = 0;
+                const bgVideo = document.getElementById('bgVideo');
+
+                function playNextVideo() {
+                    currentVideoIndex = (currentVideoIndex + 1) % videoUrls.length;
+                    bgVideo.src = videoUrls[currentVideoIndex];
+                    bgVideo.play().catch(e => console.log('Video playback error:', e));
+                }
+
+                bgVideo.addEventListener('ended', playNextVideo);
+                bgVideo.addEventListener('error', playNextVideo);
+            </script>
+            <div class="hero-content">
+                <br>
+                <br>
+                <h1>Adorn Your Beauty</h1>
+                <p>Discover our exquisite collection of handcrafted jewellery for every occasion.</p>
+                <br>
+                <br>
+            </div>
+        </section>
+
+        <div class="products-grid">
+        </div>
+    </div>
+
+    <button id="resetButton" class="reset-button" title="Reset Chat">
+        <span class="material-icons">restart_alt</span>
+    </button>
+    
+    <button id="chatButton" class="chat-button" title="Open Gift Finder">
+        <span class="material-icons icon-default">chat</span>
+        <span class="material-icons icon-open">arrow_forward_ios</span>
+        <div id="chatNotification" class="notification-badge">+1</div>
+    </button>
+
+    <div id="chat-interface">
+        <iframe src="index.html" style="width: 100%; height: 100%; border: none;"></iframe>
+    </div>
+
+    <div class="modal-backdrop" id="tryOnModal">
+        <div class="tryout-main" id="tryoutMain">
+            <button class="modal-close" onclick="closeTryOnModal()">
+                <span class="material-icons">close</span>
+            </button>
+            <div class="tryout-left">
+                <div class="loading-overlay" id="loadingOverlay">
+                    <div class="loader-container">
+                        <span></span>
+                        <span></span>
+                        <span></span>
+                        <span></span>
+                    </div>
+                </div>
+                <div class="main-preview">
+                    <img src="" alt="Preview" id="mainPreview">
+                </div>
+                <div class="preview-grid">
+                    <!-- Preview thumbnails will be added dynamically -->
+                </div>
+            </div>
+            <div class="tryout-right">
+                <h3>
+                    Virtual Try-On
+                    <span class="count">Currently viewing</span>
+                </h3>
+                <div class="current-product">
+                    <!-- Current product will be added dynamically -->
+                </div>
+                <h3>
+                    Similar Products
+                    <span class="count">You might also like</span>
+                </h3>
+                <div class="similar-list">
+                    <!-- Similar products will be added dynamically -->
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let cart = JSON.parse(localStorage.getItem('cart')) || [];
+
+        function updateCartCount() {
+            const count = cart.reduce((sum, item) => sum + item.quantity, 0);
+            document.querySelector('.cart-count').textContent = count;
+        }
+
+        function addToCart(title, price, image) {
+            const existingItem = cart.find(item => item.title === title);
+            
+            if (existingItem) {
+                existingItem.quantity += 1;
+            } else {
+                cart.push({
+                    title,
+                    price,
+                    image,
+                    quantity: 1
+                });
+            }
+            
+            localStorage.setItem('cart', JSON.stringify(cart));
+            updateCartCount();
+        }
+
+        // Initialize cart count
+        updateCartCount();
+
+        // Add product cards
+        const productsGrid = document.querySelector('.products-grid');
+        const products = [
+            {
+                id: 'diamond-necklace',
+                title: 'Royal Diamond Necklace',
+                description: 'Exquisite handcrafted diamond necklace with 24K gold chain',
+                price: 24999.99,
+                image: 'https://images.unsplash.com/photo-1599643478518-a784e5dc4c8f?w=500',
+                images: [
+                    'https://images.unsplash.com/photo-1599643478518-a784e5dc4c8f?w=500',
+                    'https://i.pinimg.com/736x/92/f0/7b/92f07baaf6186b555578aff1eeb8b35e.jpg',
+                    'https://www.mannash.in/cdn/shop/files/MCYCP675D1634_Y2.jpg?v=1698656683',
+                    'https://www.mannash.in/cdn/shop/files/MCYCP675D1634_Y2.jpg?v=1698656683'
+                ]
+            },
+            {
+                id: 'pearl-earrings',
+                title: 'Elegant Pearl Earrings',
+                description: 'Premium cultured pearl earrings with sterling silver settings',
+                price: 7499.99,
+                image: 'https://encrypted-tbn0.gstatic.com/shopping?q=tbn:ANd9GcQ6_WJcQOBpFSpc2sGIElbOhYfOTcry9HT_bglfwbayDH3G7uJ8mCdL7z6vs_eZtCy_WdfeX7yG-iBwklHav7HMZwThZltITw',
+                images: [
+                    'https://encrypted-tbn0.gstatic.com/shopping?q=tbn:ANd9GcQCdhP1e9cmNqmCc1h302sgYGlUXkPKENpImKFfogYc5K-GqwkYY7IiPbV9aMLDtHjGPUEkhfrE6ZUA7y6pPiGxZXTcmzGnF1xPWmRDPsClMsPGBH0Kj5g',
+                    'https://encrypted-tbn1.gstatic.com/shopping?q=tbn:ANd9GcQwBmDoQJFtjzv45upg3D2QNnYso05UGmE7IzZ6vvDOEHXsZS25g_vXPNVvYytI_16EvqMNKPI1xWPSO38avTToFuLHVX3nXMZkQdesTqBGWXUHK6YPCYo',
+                    'https://images.unsplash.com/photo-1633555715049-0c2777ee516e?w=500'
+                ]
+            },
+            {
+                id: 'gold-bracelet',
+                title: 'Classic Gold Bracelet',
+                description: 'Timeless 18K gold bracelet with intricate detailing',
+                price: 12999.99,
+                image: 'https://images.unsplash.com/photo-1611591437281-460bfbe1220a?w=500',
+                images: [
+                    'https://images.unsplash.com/photo-1611591437281-460bfbe1220a?w=500',
+                    'https://images.unsplash.com/photo-1573408301185-9146fe634ad0?w=500',
+                    'https://images.unsplash.com/photo-1602752250015-52934bc45613?w=500'
+                ]
+            },
+            {
+                id: 'sapphire-ring',
+                title: 'Sapphire Engagement Ring',
+                description: 'Stunning sapphire center stone with diamond halo',
+                price: 18499.99,
+                image: 'https://images.unsplash.com/photo-1605100804763-247f67b3557e?w=500',
+                images: [
+                    'https://images.unsplash.com/photo-1605100804763-247f67b3557e?w=500',
+                    'https://images.unsplash.com/photo-1603974372039-adc49044b6bd?w=500',
+                    'https://images.unsplash.com/photo-1605100797606-40253a2d7b10?w=500'
+                ]
+            },
+            {
+                id: 'silver-pendant',
+                title: 'Golden Lotus Pendant',
+                description: 'Handcrafted silver pendant with lotus flower design',
+                price: 3499.99,
+                image: 'https://images.unsplash.com/photo-1601121141461-9d6647bca1ed?w=500',
+                images: [
+                    'https://images.unsplash.com/photo-1601121141461-9d6647bca1ed?w=500',
+                    'https://images.unsplash.com/photo-1611107683227-e9060eccd846?w=500',
+                    'https://images.unsplash.com/photo-1535632066927-ab7c9ab60908?w=500'
+                ]
+            },
+            {
+                id: 'ruby-necklace',
+                title: 'Ruby Teardrop Necklace',
+                description: 'Elegant ruby teardrop pendant on 18K gold chain',
+                price: 15999.99,
+                image: 'https://encrypted-tbn3.gstatic.com/shopping?q=tbn:ANd9GcRJAPtPpBY7cUS4Oa9T1v4qI1AI5vwYLfPkLtWdHuPOyDxlGTDCSWAH67qDS_7RhDYCAbs9p4gMsKme34w3desV08FleNQUznVXAIEvZ5sIsXPPAevRNwbP',
+                images: [
+                    'https://encrypted-tbn3.gstatic.com/shopping?q=tbn:ANd9GcRWo0L3T_czzLs0yUpuI05QNXvKV7cWWmTGOPLsms5Yu_KvO8zXJ_OehidIgxbctQrNvGfGS0ZXuy0sKmjzf7gGxlECqoHQVIw9pXEfzpKRHyOC2iW1b1B_5g',
+                    'https://encrypted-tbn2.gstatic.com/shopping?q=tbn:ANd9GcSvOe5i84clNidSy-Liwyp0Uy8Pffw9gmXLi-QvdESdFIsjhB-w4NX4HUnisu0FLdt7FCExeBOviUKVhbdyfBTsWacUQ6X3_49xnlyZsk2GPtaGAJLlGgE',
+                    'https://encrypted-tbn0.gstatic.com/shopping?q=tbn:ANd9GcRVG_fpr6E15inSGztZwhdHRijZasgL213Y6XJ-UIFrGogU2mMT_LLBV36AMb7B5FgYIYNuA6rslWcZGgf3ATYvp8iAhM3aiWL8zUZACHaYNbc3QKOR3ug',
+                    'https://encrypted-tbn2.gstatic.com/shopping?q=tbn:ANd9GcQjGSsgGgc2JKRrfYVytHb1s0c14y7uTGZjKoCY70pHFX3x5Trsr8TBHRSijTy5ydTtbt-niNWOFCjfIpTj92TFyXBIvgs3QSMOsn6Z'
+                ]
+            },
+            {
+                id: 'emerald-earrings',
+                title: 'Emerald Drop Earrings',
+                description: 'Luxurious emerald drop earrings with diamond accents',
+                price: 9299.99,
+                image: 'https://images.unsplash.com/photo-1617038260897-41a1f14a8ca0?w=500',
+                images: [
+                    'https://images.unsplash.com/photo-1617038260897-41a1f14a8ca0?w=500',
+                    'https://images.unsplash.com/photo-1630019852942-7a3592373ca0?w=500',
+                    'https://images.unsplash.com/photo-1633555234047-567609406e38?w=500'
+                ]
+            }
+        ];
+
+        productsGrid.innerHTML = products.map(product => `
+            <div class="product-card" data-product-id="${product.id}">
+                <a href="product.html?id=${product.id}" style="text-decoration: none; color: inherit;">
+                    <div class="product-image-container">
+                        <img src="${product.image}" alt="${product.title}" class="product-image">
+                    </div>
+                    <h3 class="product-title">${product.title}</h3>
+                    <p class="product-description">${product.description}</p>
+                    <div class="product-price">₹${product.price}</div>
+                </a>
+                <button class="add-to-cart" onclick="addToCart('${product.title}', ${product.price}, '${product.image}')">
+                    Add to Cart
+                </button>
+            </div>
+        `).join('');
+
+        let chatStarted = false;
+
+        // Initialize chat button
+        document.getElementById('chatButton').addEventListener('click', function(e) {
+            e.preventDefault();
+            e.stopPropagation();
+            toggleChat();
+        });
+
+        function toggleChat() {
+            const chatInterface = document.getElementById('chat-interface');
+            const resetButton = document.getElementById('resetButton');
+            const chatButton = document.getElementById('chatButton');
+            
+            chatInterface.classList.toggle('open');
+            chatButton.classList.toggle('open');
+
+            // Show/hide reset button based on chat state
+            if (chatInterface.classList.contains('open')) {
+                resetButton.classList.add('visible');
+                chatButton.title = "Close Gift Finder";
+            } else {
+                resetButton.classList.remove('visible');
+                chatButton.title = "Open Gift Finder";
+            }
+
+            // Start chat on first open
+            if (!chatStarted) {
+                setTimeout(() => {
+                    document.querySelector('#chat-interface iframe').contentWindow.postMessage('startChat', '*');
+                    chatStarted = true;
+                }, 500);
+            }
+        }
+
+        // Initialize reset button
+        document.getElementById('resetButton').addEventListener('click', function(e) {
+            e.preventDefault();
+            e.stopPropagation();
+            
+            // Reset the chat by reloading the iframe
+            const iframe = document.querySelector('#chat-interface iframe');
+            iframe.src = iframe.src;
+            chatStarted = false;
+            
+            // Start the chat again after a brief delay
+            setTimeout(() => {
+                document.querySelector('#chat-interface iframe').contentWindow.postMessage('startChat', '*');
+                chatStarted = true;
+            }, 500);
+        });
+        
+        // Show notification badge when user scrolls a bit
+        let notificationShown = false;
+        window.addEventListener('scroll', function() {
+            if (window.scrollY > 200 && !notificationShown && !document.getElementById('chat-interface').classList.contains('open')) {
+                const notificationBadge = document.getElementById('chatNotification');
+                notificationBadge.classList.add('show');
+                notificationShown = true;
+            }
+        });
+        
+        // Reset notification when chat is opened
+        document.getElementById('chatButton').addEventListener('click', function() {
+            const notificationBadge = document.getElementById('chatNotification');
+            notificationBadge.classList.remove('show');
+        });
+
+        // Add smooth scrolling to navigation links
+        document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+            anchor.addEventListener('click', function (e) {
+                e.preventDefault();
+                document.querySelector(this.getAttribute('href')).scrollIntoView({
+                    behavior: 'smooth'
+                });
+            });
+        });
+
+        // Add animation to product cards on scroll
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    entry.target.style.opacity = 1;
+                    entry.target.style.transform = 'translateY(0)';
+                }
+            });
+        });
+
+        document.querySelectorAll('.product-card').forEach((card) => {
+            card.style.opacity = 0;
+            card.style.transform = 'translateY(20px)';
+            card.style.transition = 'opacity 0.5s ease, transform 0.5s ease';
+            observer.observe(card);
+        });
+
+        // Listen for messages from the chat iframe
+        window.addEventListener('message', function(event) {
+            console.log('Received message:', event.data); // Debug log
+            
+            if (event.data.type === 'openTryoutModal') {
+                const modal = document.getElementById('tryOnModal');
+                const tryoutMain = document.getElementById('tryoutMain');
+                const chatInterface = document.getElementById('chat-interface');
+                
+                // Close chat interface if open
+                if (chatInterface && chatInterface.classList.contains('open')) {
+                    chatInterface.classList.remove('open');
+                    document.getElementById('chatButton').classList.remove('open');
+                    document.getElementById('resetButton').classList.remove('visible');
+                }
+                
+                // Show modal
+                modal.classList.add('active');
+                
+                if (event.data.image || event.data.description) {
+                    tryoutMain.style.display = 'flex';
+                    
+                    // Set preview image
+                    const mainPreview = document.getElementById('mainPreview');
+                    mainPreview.src = 'images/img2.webp'; // Use absolute path
+                    
+                    // Setup preview grid
+                    const previewGrid = document.querySelector('.preview-grid');
+                    const previewImages = [
+                        'images/img1.webp',
+                        'images/img2.webp',
+                        'images/img3.webp',
+                        'images/img4.webp',
+                    ];
+                    
+                    previewGrid.innerHTML = previewImages.map((img, index) => `
+                        <div class="preview-thumb ${index === 0 ? 'active' : ''}" onclick="updateMainPreview('${img}', ${index})">
+                            <img src="${img}" alt="View ${index + 1}">
+                        </div>
+                    `).join('');
+                    
+                    // Show loading overlay
+                    document.getElementById('loadingOverlay').classList.add('active');
+                    
+                    // Animate in the main tryout view
+                    setTimeout(() => {
+                        tryoutMain.classList.add('active');
+                        // Hide loading after 2 seconds
+                        setTimeout(() => {
+                            document.getElementById('loadingOverlay').classList.remove('active');
+                        }, 2000);
+                    }, 100);
+                }
+
+                // Add this after setting up the preview grid
+                // Setup similar products
+                const similarList = document.querySelector('.similar-list');
+                // Filter products based on type or style
+                const recommendations = products.slice(0, 4); // Show first 4 products as recommendations
+                
+                similarList.innerHTML = recommendations.map(product => `
+                    <div class="similar-product" onclick="window.location.href='product.html?id=${product.id}'">
+                        <img src="${product.image}" alt="${product.title}">
+                        <div class="similar-product-info">
+                            <div class="similar-product-title">${product.title}</div>
+                            <div class="similar-product-price">₹${product.price.toFixed(2)}</div>
+                            <div class="similar-product-description">${product.description}</div>
+                        </div>
+                    </div>
+                `).join('');
+            }
+
+            if (event.data.type === 'openTryoutModal') {
+                // ...existing modal opening code...
+
+                // Get current product from URL or default to first product
+                const urlParams = new URLSearchParams(window.location.search);
+                const currentProductId = urlParams.get('id') || 'running-pro';
+                const currentProduct = products.find(p => p.id === currentProductId) || products[0];
+
+                // Setup current product
+                const currentProductEl = document.querySelector('.current-product');
+                currentProductEl.innerHTML = `
+                    <div class="current-product-header">
+                        <div class="current-status">
+                            <span class="material-icons">visibility</span>
+                            Currently Trying
+                        </div>
+                    </div>
+                    <div class="similar-product">
+                        <img src="${currentProduct.image}" alt="${currentProduct.title}">
+                        <div class="similar-product-info">
+                            <div class="similar-product-title">${currentProduct.title}</div>
+                            <div class="similar-product-price">₹${currentProduct.price.toFixed(2)}</div>
+                            <div class="similar-product-description">${currentProduct.description}</div>
+                        </div>
+                    </div>
+                    <div class="product-actions">
+                        <button class="product-action-btn view-product" onclick="window.open('product.html?id=${currentProduct.id}', '_blank')">
+                            <span class="material-icons">shopping_bag</span> View Product
+                        </button>
+                    </div>
+                `;
+
+                // Setup similar products (excluding current product)
+                const similarList = document.querySelector('.similar-list');
+                const recommendations = products
+                    .filter(p => p.id !== currentProduct.id)
+                    .slice(0, 3); // Show 3 similar products
+                
+                similarList.innerHTML = recommendations.map(product => `
+                    <div class="similar-product" onclick="window.location.href='product.html?id=${product.id}'">
+                        <img src="${product.image}" alt="${product.title}">
+                        <div class="similar-product-info">
+                            <div class="similar-product-title">${product.title}</div>
+                            <div class="similar-product-price">₹${product.price.toFixed(2)}</div>
+                            <div class="similar-product-description">${product.description}</div>
+                        </div>
+                    </div>
+                `).join('');
+            }
+
+            if (event.data && event.data.type === 'openProduct') {
+                const productId = event.data.productId;
+                
+                // Navigate to the product page
+                window.location.href = `product.html?id=${productId}`;
+            }
+        });
+
+        // Add these helper functions
+        function updateMainPreview(imgSrc, index) {
+            const mainPreview = document.getElementById('mainPreview');
+            mainPreview.src = imgSrc;
+            
+            document.querySelectorAll('.preview-thumb').forEach((thumb, i) => {
+                thumb.classList.toggle('active', i === index);
+            });
+        }
+
+        function closeTryOnModal() {
+            const modal = document.getElementById('tryOnModal');
+            const tryoutMain = document.getElementById('tryoutMain');
+
+            if (tryoutMain.classList.contains('active')) {
+                tryoutMain.classList.remove('active');
+                setTimeout(() => {
+                    tryoutMain.style.display = 'none';
+                }, 300);
+            }
+
+            modal.classList.remove('active');
+        }
+
+        // Show announcement bar after delay
+        setTimeout(() => {
+            const bar = document.querySelector('.announcement-bar');
+            bar.classList.add('show');
+            // Ensure smooth scroll adjustment
+            window.scrollTo({
+                top: window.scrollY,
+                behavior: 'smooth'
+            });
+        }, 2000);
+
+        function closeAnnouncement() {
+            const bar = document.querySelector('.announcement-bar');
+            bar.style.position = 'absolute';
+            bar.style.transform = 'translateY(-100%)';
+            // Remove from DOM after animation
+            setTimeout(() => {
+                bar.style.display = 'none';
+            }, 800);
+        }
+    </script>
+</body>
+</html>

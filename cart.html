@@ -1,0 +1,422 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Shopping Cart - Gift Haven</title>
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+        }
+
+        body {
+            background: #f8fafc;
+            color: #334155;
+            min-height: 100vh;
+        }
+
+        .header {
+            background: white;
+            padding: 1rem;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+        }
+
+        .header-content {
+            max-width: 1200px;
+            margin: 0 auto;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0.5rem;
+        }
+
+        .logo {
+            font-size: 1.5rem;
+            font-weight: 600;
+            color: #0f172a;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            text-decoration: none;
+        }
+
+        .logo span {
+            color: #0ea5e9;
+        }
+
+        .nav-links {
+            display: flex;
+            gap: 2rem;
+            align-items: center;
+        }
+
+        .nav-link {
+            color: #64748b;
+            text-decoration: none;
+            font-weight: 500;
+            transition: color 0.2s;
+        }
+
+        .nav-link:hover {
+            color: #0ea5e9;
+        }
+
+        .cart-container {
+            max-width: 1200px;
+            margin: 2rem auto;
+            padding: 0 1rem;
+            display: grid;
+            grid-template-columns: 2fr 1fr;
+            gap: 2rem;
+        }
+
+        .cart-items {
+            background: white;
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+        }
+
+        .cart-summary {
+            background: white;
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+            height: fit-content;
+            position: sticky;
+            top: 100px;
+        }
+
+        .cart-item {
+            display: grid;
+            grid-template-columns: auto 1fr auto;
+            gap: 1rem;
+            padding: 1rem 0;
+            border-bottom: 1px solid #e2e8f0;
+        }
+
+        .cart-item:last-child {
+            border-bottom: none;
+        }
+
+        .item-image {
+            width: 100px;
+            height: 100px;
+            object-fit: cover;
+            border-radius: 0.5rem;
+        }
+
+        .item-details {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+
+        .item-title {
+            font-weight: 600;
+            color: #0f172a;
+        }
+
+        .item-price {
+            color: #64748b;
+        }
+
+        .item-quantity {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .quantity-btn {
+            background: none;
+            border: 1px solid #e2e8f0;
+            border-radius: 0.25rem;
+            padding: 0.25rem 0.5rem;
+            cursor: pointer;
+            color: #64748b;
+        }
+
+        .quantity-btn:hover {
+            background: #f1f5f9;
+        }
+
+        .remove-btn {
+            color: #ef4444;
+            background: none;
+            border: none;
+            cursor: pointer;
+            font-size: 0.875rem;
+        }
+
+        .remove-btn:hover {
+            text-decoration: underline;
+        }
+
+        .summary-title {
+            font-size: 1.25rem;
+            font-weight: 600;
+            margin-bottom: 1rem;
+        }
+
+        .summary-row {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 0.5rem;
+            color: #64748b;
+        }
+
+        .summary-total {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 1rem;
+            padding-top: 1rem;
+            border-top: 1px solid #e2e8f0;
+            font-weight: 600;
+            color: #0f172a;
+        }
+
+        .checkout-btn {
+            display: block;
+            width: 100%;
+            background: #0ea5e9;
+            color: white;
+            border: none;
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-top: 1.5rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
+
+        .checkout-btn:hover {
+            background: #0284c7;
+        }
+
+        .empty-cart {
+            text-align: center;
+            padding: 3rem;
+            color: #64748b;
+        }
+
+        .empty-cart-icon {
+            font-size: 4rem;
+            color: #e2e8f0;
+            margin-bottom: 1rem;
+        }
+
+        @media (max-width: 768px) {
+            .cart-container {
+                grid-template-columns: 1fr;
+            }
+
+            .cart-summary {
+                position: static;
+            }
+        }
+
+        /* Checkout Form Styles */
+        .checkout-form {
+            display: none;
+            margin-top: 1rem;
+        }
+
+        .form-group {
+            margin-bottom: 1rem;
+        }
+
+        .form-label {
+            display: block;
+            margin-bottom: 0.5rem;
+            color: #64748b;
+            font-size: 0.875rem;
+        }
+
+        .form-input {
+            width: 100%;
+            padding: 0.75rem;
+            border: 1px solid #e2e8f0;
+            border-radius: 0.5rem;
+            font-size: 1rem;
+        }
+
+        .form-input:focus {
+            outline: none;
+            border-color: #0ea5e9;
+            box-shadow: 0 0 0 3px rgba(14, 165, 233, 0.1);
+        }
+    </style>
+</head>
+<body>
+    <header class="header">
+        <div class="header-content">
+            <a href="store.html" class="logo">
+                <span>🎁</span> Gift Haven
+            </a>
+            <nav class="nav-links">
+                <a href="store.html" class="nav-link">Home</a>
+                <a href="cart.html" class="nav-link">Cart</a>
+                <a href="#" class="nav-link">Categories</a>
+                <a href="#" class="nav-link">About</a>
+            </nav>
+        </div>
+    </header>
+
+    <div class="cart-container">
+        <div class="cart-items">
+            <!-- Cart items will be dynamically inserted here -->
+        </div>
+        <div class="cart-summary">
+            <h2 class="summary-title">Order Summary</h2>
+            <div class="summary-row">
+                <span>Subtotal</span>
+                <span class="subtotal">$0.00</span>
+            </div>
+            <div class="summary-row">
+                <span>Shipping</span>
+                <span class="shipping">$0.00</span>
+            </div>
+            <div class="summary-row">
+                <span>Tax</span>
+                <span class="tax">$0.00</span>
+            </div>
+            <div class="summary-total">
+                <span>Total</span>
+                <span class="total">$0.00</span>
+            </div>
+            <button id="checkoutBtn" class="checkout-btn">Proceed to Checkout</button>
+
+            <!-- Checkout Form -->
+            <form class="checkout-form">
+                <div class="form-group">
+                    <label class="form-label">Full Name</label>
+                    <input type="text" class="form-input" required>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Email</label>
+                    <input type="email" class="form-input" required>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Shipping Address</label>
+                    <input type="text" class="form-input" required>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Card Number</label>
+                    <input type="text" class="form-input" placeholder="**** **** **** ****" required>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Expiry Date</label>
+                    <input type="text" class="form-input" placeholder="MM/YY" required>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">CVV</label>
+                    <input type="text" class="form-input" placeholder="***" required>
+                </div>
+                <button type="submit" class="checkout-btn">Place Order</button>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        // Cart functionality
+        let cart = JSON.parse(localStorage.getItem('cart')) || [];
+        const cartItemsContainer = document.querySelector('.cart-items');
+        const checkoutBtn = document.getElementById('checkoutBtn');
+        const checkoutForm = document.querySelector('.checkout-form');
+
+        function updateCart() {
+            if (cart.length === 0) {
+                cartItemsContainer.innerHTML = `
+                    <div class="empty-cart">
+                        <span class="material-icons empty-cart-icon">shopping_cart</span>
+                        <p>Your cart is empty</p>
+                    </div>
+                `;
+                return;
+            }
+
+            cartItemsContainer.innerHTML = cart.map((item, index) => `
+                <div class="cart-item">
+                    <img src="${item.image}" alt="${item.title}" class="item-image">
+                    <div class="item-details">
+                        <div class="item-title">${item.title}</div>
+                        <div class="item-price">$${item.price}</div>
+                        <div class="item-quantity">
+                            <button class="quantity-btn" onclick="updateQuantity(${index}, -1)">-</button>
+                            <span>${item.quantity}</span>
+                            <button class="quantity-btn" onclick="updateQuantity(${index}, 1)">+</button>
+                        </div>
+                    </div>
+                    <button class="remove-btn" onclick="removeItem(${index})">Remove</button>
+                </div>
+            `).join('');
+
+            updateSummary();
+        }
+
+        function updateQuantity(index, change) {
+            cart[index].quantity = Math.max(1, cart[index].quantity + change);
+            localStorage.setItem('cart', JSON.stringify(cart));
+            updateCart();
+        }
+
+        function removeItem(index) {
+            cart.splice(index, 1);
+            localStorage.setItem('cart', JSON.stringify(cart));
+            updateCart();
+        }
+
+        function updateSummary() {
+            const subtotal = cart.reduce((sum, item) => sum + item.price * item.quantity, 0);
+            const shipping = subtotal > 0 ? 5.99 : 0;
+            const tax = subtotal * 0.08;
+            const total = subtotal + shipping + tax;
+
+            document.querySelector('.subtotal').textContent = `$${subtotal.toFixed(2)}`;
+            document.querySelector('.shipping').textContent = `$${shipping.toFixed(2)}`;
+            document.querySelector('.tax').textContent = `$${tax.toFixed(2)}`;
+            document.querySelector('.total').textContent = `$${total.toFixed(2)}`;
+        }
+
+        checkoutBtn.addEventListener('click', () => {
+            if (cart.length === 0) {
+                alert('Your cart is empty!');
+                return;
+            }
+            checkoutForm.style.display = checkoutForm.style.display === 'none' ? 'block' : 'none';
+            checkoutBtn.textContent = checkoutForm.style.display === 'none' ? 'Proceed to Checkout' : 'Cancel';
+        });
+
+        document.querySelector('.checkout-form').addEventListener('submit', (e) => {
+            e.preventDefault();
+            alert('Order placed successfully! Thank you for shopping with us.');
+            cart = [];
+            localStorage.setItem('cart', JSON.stringify(cart));
+            updateCart();
+            checkoutForm.style.display = 'none';
+            checkoutBtn.textContent = 'Proceed to Checkout';
+        });
+
+        // Initialize cart
+        updateCart();
+
+        // Check if we should expand checkout section
+        const urlParams = new URLSearchParams(window.location.search);
+        if (urlParams.get('checkout') === 'true') {
+            const checkoutForm = document.querySelector('.checkout-form');
+            const checkoutBtn = document.getElementById('checkoutBtn');
+            if (checkoutForm && checkoutBtn) {
+                checkoutForm.style.display = 'block';
+                checkoutBtn.textContent = 'Hide Checkout';
+            }
+        }
+    </script>
+</body>
+</html>

@@ -1,0 +1,882 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Perfect Gift Finder</title>
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        html, body {
+            height: 100%;
+            overflow: hidden;
+            position: fixed;
+            width: 100%;
+            -webkit-overflow-scrolling: touch;
+        }
+
+        body {
+            font-family: 'Arial', sans-serif;
+            background: transparent;
+        }
+
+        .chat-container {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            padding: 0px;
+            background: rgba(0, 0, 0, 0.2);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            border: 1px solid rgb(215, 215, 215);
+            width: 100%;
+            max-width: 600px;
+            margin: 0 auto;
+            display: flex;
+            flex-direction: column;
+            height: 100%;
+            overflow: hidden;
+            border-radius: 25px;
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        .messages-container {
+            flex: 1;
+            overflow-y: auto;
+            padding: 15px;
+            -webkit-overflow-scrolling: touch;
+        }
+
+        .messages-container::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        .messages-container::-webkit-scrollbar-track {
+            background: transparent;
+        }
+
+        .messages-container::-webkit-scrollbar-thumb {
+            background: rgba(255, 255, 255, 0.3);
+            border-radius: 3px;
+        }
+
+        .chat-message {
+            display: flex;
+            align-items: flex-start;
+            margin: 8px 16px;
+            opacity: 0;
+            transform: translateY(20px);
+            animation: smoothPopIn 0.4s ease forwards;
+        }
+
+        .chat-message.ai:not(.with-avatar) {
+            margin-left: 24px;
+        }
+
+        .chat-message.ai .message-content {
+            margin-left: 24px;
+        }
+
+        .avatar {
+            position: fixed;
+            left: -20px;
+        }
+
+        .chat-message.user {
+            flex-direction: row-reverse;
+            justify-content: flex-start;
+            margin-right: 0px;
+        }
+
+        .message-content {
+            max-width: 80%;
+            padding: 12px 16px;
+            border-radius: 20px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            font-size: 0.95rem;
+            line-height: 1.4;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .ai .message-content {
+            background: rgba(255, 255, 255, 0.9);
+            color: #333;
+            border-radius: 20px;
+            margin-right: 16px;
+        }
+
+        .user .message-content {
+            background: rgba(52, 152, 219, 0.9);
+            color: white;
+            border-radius: 20px;
+            margin-left: 10px;
+            margin-right: 10px;
+        }
+
+        .avatar {
+            width: 32px;
+            height: 32px;
+            min-width: 32px;
+            background: rgba(52, 152, 219, 0.9);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-right: 8px;
+        }
+
+        .avatar .material-icons {
+            color: white;
+            font-size: 18px;
+        }
+
+        .input-group {
+            padding: 10px;
+            background: rgba(255, 255, 255, 0.15);
+            border-top: 1px solid rgba(255, 255, 255, 0.2);
+            display: flex;
+            gap: 10px;
+            border-bottom-left-radius: 25px;
+            border-bottom-right-radius: 25px;
+        }
+
+        .input-box {
+            flex: 1;
+            padding: 15px 20px;
+            border: none;
+            border-radius: 25px;
+            font-size: 1rem;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+            background: rgba(255, 255, 255, 0.9);
+            transition: all 0.3s ease;
+        }
+
+        .input-box:focus {
+            outline: none;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+        }
+
+        .action-btn {
+            background: rgba(255, 255, 255, 0.9);
+            border: none;
+            width: 50px;
+            height: 50px;
+            border-radius: 25px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+            transition: all 0.3s ease;
+            flex-shrink: 0;
+        }
+
+        .action-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.2);
+        }
+
+        .material-icons {
+            color: #333;
+            font-size: 24px;
+        }
+
+        .options-container {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin-top: 4px;
+        }
+
+        .option-button {
+            background: rgba(255, 255, 255, 0.9);
+            border: 1px solid rgba(52, 152, 219, 0.3);
+            padding: 10px 20px;
+            border-radius: 20px;
+            cursor: pointer;
+            font-size: 0.95rem;
+            transition: all 0.3s ease;
+            color: #333;
+            width: 100%;
+            max-width: 400px;
+            height: 60px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .option-button:hover:not(:disabled) {
+            background: rgba(52, 152, 219, 0.9);
+            color: white;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+        }
+
+        .option-button:active:not(:disabled) {
+            transform: translateY(0);
+        }
+
+        .option-button.selected {
+            background: rgba(52, 152, 219, 0.9);
+            color: white;
+            pointer-events: none;
+        }
+
+        .option-button:disabled {
+            opacity: 0.7;
+            cursor: default;
+            pointer-events: none;
+        }
+
+        .options-container.answered {
+            pointer-events: none;
+        }
+
+        .category-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 12px;
+            width: 100%;
+            max-width: 400px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        .category-button {
+            display: flex;
+            align-items: center;
+            width: 100%;
+            height: 60px;
+            padding: 0 20px;
+            background-color: #ffffff;
+            border: 1px solid #e5e7eb;
+            border-radius: 12px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            color: inherit;
+            font-size: 16px;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+        }
+
+        .category-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        .category-button span {
+            margin-right: 12px;
+            font-size: 20px;
+            min-width: 24px;
+            text-align: center;
+        }
+
+        .category-button-text {
+            flex: 1;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        @keyframes pulse {
+            0% { transform: scale(1); box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2); }
+            50% { transform: scale(1.05); box-shadow: 0 8px 20px rgba(0, 0, 0, 0.3); }
+            100% { transform: scale(1); box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2); }
+        }
+
+        @keyframes smoothPopIn {
+            0% {
+                transform: translateY(20px);
+                opacity: 0;
+            }
+            100% {
+                transform: translateY(0);
+                opacity: 1;
+            }
+        }
+
+        .typing-indicator {
+            display: flex;
+            align-items: flex-start;
+            gap: 8px;
+            margin-bottom: 15px;
+            margin-left: 48px;
+            opacity: 0;
+            transform: translateY(20px);
+            animation: messagePopIn 0.3s ease forwards;
+        }
+
+        .typing-indicator .avatar {
+            background: rgba(0, 0, 0, 0);
+        }
+
+        .typing-indicator .avatar .material-icons {
+            color: rgba(255, 255, 255, 0);
+        }
+
+        .typing-dots {
+            display: flex;
+            gap: 4px;
+            padding: 12px 16px;
+            background: rgba(255, 255, 255, 0.9);
+            border-radius: 20px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        }
+
+        .typing-dot {
+            width: 6px;
+            height: 6px;
+            background: #333;
+            border-radius: 50%;
+            animation: typingBounce 1.4s infinite;
+            opacity: 0.7;
+        }
+
+        .typing-dot:nth-child(2) { animation-delay: 0.2s; }
+        .typing-dot:nth-child(3) { animation-delay: 0.4s; }
+
+        @keyframes typingBounce {
+            0%, 60%, 100% { transform: translateY(0); }
+            30% { transform: translateY(-4px); }
+        }
+
+        @keyframes messagePopIn {
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .message.user img {
+            max-width: 200px;
+            border-radius: 8px;
+            margin-top: 8px;
+            display: block;
+        }
+
+        .message.user.with-image {
+            background: rgba(52, 152, 219, 0.9);
+            color: #333;
+            border-radius: 18px 18px 18px 18px;
+            padding: 12px;
+            margin: 8px 8px 8px auto;
+            max-width: 250px;
+            box-shadow: 0 1px 2px rgba(0,0,0,0.1);
+        }
+
+        .message.user.with-image .message-text {
+            color: #333;
+            margin-bottom: 8px;
+            font-size: 0.95rem;
+        }
+
+        .image-container {
+            background: rgba(52, 152, 219, 0.9);
+            border-radius: 12px;
+            padding: 8px;
+            margin-top: 8px;
+            box-shadow: inset 0 0 0 1px rgba(0,0,0,0.05);
+        }
+
+        .message.user img {
+            max-width: 100%;
+            border-radius: 8px;
+            display: block;
+            width: 100%;
+            height: auto;
+        }
+
+        .image-loading {
+            width: 100%;
+            height: 3px;
+            background: rgba(255,255,255,0.1);
+            border-radius: 3px;
+            overflow: hidden;
+            margin-top: 8px;
+        }
+
+        .image-loading::after {
+            content: '';
+            display: block;
+            width: 40%;
+            height: 100%;
+            background: rgba(255,255,255,0.3);
+            animation: imageLoading 1s infinite ease-in-out;
+        }
+
+        @keyframes imageLoading {
+            0% { transform: translateX(-100%); }
+            100% { transform: translateX(250%); }
+        }
+
+        .analysis-animation {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.85);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 2002;
+            backdrop-filter: blur(8px);
+        }
+
+        .analysis-animation.active {
+            display: flex;
+        }
+
+        .magic-lamp {
+            width: 120px;
+            height: 120px;
+            position: relative;
+            transform-origin: bottom center;
+            animation: lampFloat 3s ease-in-out infinite;
+        }
+
+        .lamp-body {
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(45deg, #3498db, #2980b9);
+            border-radius: 50%;
+            position: relative;
+            overflow: hidden;
+            box-shadow: 0 0 30px rgba(52, 152, 219, 0.5);
+        }
+
+        .lamp-glow {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 80%;
+            height: 80%;
+            background: radial-gradient(circle, rgba(255,255,255,0.9), transparent);
+            transform: translate(-50%, -50%);
+            animation: lampGlow 2s ease-in-out infinite;
+        }
+
+        .particle {
+            position: absolute;
+            width: 4px;
+            height: 4px;
+            background: white;
+            border-radius: 50%;
+            pointer-events: none;
+            opacity: 0;
+        }
+
+        @keyframes lampFloat {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-20px); }
+        }
+
+        @keyframes lampGlow {
+            0%, 100% { opacity: 0.5; transform: translate(-50%, -50%) scale(1); }
+            50% { opacity: 1; transform: translate(-50%, -50%) scale(1.2); }
+        }
+
+        @keyframes particleFloat {
+            0% { 
+                transform: translate(var(--startX), var(--startY)) scale(0);
+                opacity: 1;
+            }
+            100% { 
+                transform: translate(var(--endX), var(--endY)) scale(0);
+                opacity: 0;
+            }
+        }
+
+        .analysis-text {
+            position: absolute;
+            bottom: 15%;
+            left: 0;
+            right: 0;
+            text-align: center;
+            color: white;
+            font-size: 1.2rem;
+            opacity: 0.9;
+        }
+
+        .message.ai .products-container {
+            background: #1e2a38;
+            border-radius: 18px;
+            padding: 16px;
+            margin-top: 12px;
+            color: white;
+        }
+
+        .product-card {
+            display: flex;
+            align-items: center;
+            padding: 12px;
+            background: rgba(44, 62, 80, 0.95);
+            border-radius: 12px;
+            margin-bottom: 10px;
+            transition: all 0.3s ease;
+        }
+
+        .product-card:hover {
+            background: rgba(52, 73, 94, 0.95);
+        }
+
+        .product-image {
+            width: 70px;
+            height: 70px;
+            border-radius: 8px;
+            object-fit: cover;
+            margin-right: 12px;
+            background: #2c3e50;
+        }
+
+        .product-info {
+            flex: 1;
+        }
+
+        .product-name {
+            font-size: 1.1rem;
+            font-weight: 500;
+            margin-bottom: 6px;
+            color: white;
+        }
+
+        .product-description {
+            font-size: 0.95rem;
+            color: rgba(255, 255, 255, 0.7);
+            line-height: 1.4;
+        }
+
+        .see-more-btn {
+            display: block;
+            width: 100%;
+            padding: 14px;
+            text-align: center;
+            background: rgba(44, 62, 80, 0.95);
+            border: none;
+            border-radius: 12px;
+            color: white;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin-top: 12px;
+        }
+
+        .see-more-btn:hover {
+            background: rgba(52, 73, 94, 0.95);
+        }
+
+        .products-title {
+            font-size: 1rem;
+            color: white;
+            margin-bottom: 16px;
+            line-height: 1.4;
+        }
+
+        .quantity-input {
+            width: full;
+            padding: 10px;
+            margin: 10px;
+            border: 0px solid #ccc;
+            border-radius: 8px;
+            font-size: 16px;
+            text-align: center;
+        }
+
+        .confirm-button {
+            padding: 5px 10px;
+            background-color: #3498db;
+            color: white;
+            border: none;
+            border-radius: 100px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: background-color 0.3s ease;
+        }
+
+        .confirm-button:hover {
+            background-color: #2980b9;
+        }
+    </style>
+</head>
+<body>
+    <div class="chat-container">
+        <div class="messages-container">
+            <!-- Messages will be added here dynamically -->
+        </div>
+        <div class="input-group">
+            <input type="text" class="input-box" placeholder="Type your message...">
+            <button class="action-btn camera-btn">
+                <span class="material-icons">photo_camera</span>
+            </button>
+            <button class="action-btn send-btn">
+                <span class="material-icons">send</span>
+            </button>
+        </div>
+    </div>
+
+    <script>
+        const questions = [
+            {
+                text: "Hello! Would you like help with your checkout?",
+                options: [
+                    { text: "Yes, please help me", value: "yes" },
+                    { text: "No, thanks", value: "no" }
+                ]
+            }
+        ];
+
+        let userAnswers = [];
+        let currentQuestion = 0;
+        let currentQuantity = 1;
+
+        function startQuiz() {
+            showTypingIndicator();
+            setTimeout(() => {
+                hideTypingIndicator();
+                addMessageWithOptions(questions[currentQuestion].text, questions[currentQuestion].options);
+            }, 500);
+        }
+
+        function selectOption(option, button, container) {
+            // Disable all buttons in the container
+            const buttons = container.querySelectorAll('.option-button');
+            buttons.forEach(btn => btn.disabled = true);
+            
+            // Mark selected button
+            button.classList.add('selected');
+
+            // Display user selection as a message
+            addMessage(option.text, 'user');
+
+            if (option.value === "decrease" || option.value === "increase" || option.value === "confirm" || option.value === "current") {
+                handleQuantityOption(option);
+            } else if (option.value === "cart" || option.value === "buy") {
+                handlePurchaseOption(option);
+            } else {
+                // Handle regular options
+                userAnswers[currentQuestion] = option.value;
+                
+                setTimeout(() => {
+                    const response = getResponseForSelection(option);
+                    if (response) {
+                        addMessage(response, "ai");
+                    }
+                    
+                    if (option.value === "yes") {
+                        setTimeout(() => {
+                            askAboutQuantity();
+                        }, 1000);
+                    } else if (option.value === "no") {
+                        setTimeout(() => {
+                            window.parent.postMessage({ type: 'closeChat' }, '*');
+                        }, 2000);
+                    }
+                }, 500);
+            }
+        }
+
+        function askAboutQuantity() {
+            const messagesContainer = document.querySelector('.messages-container');
+
+            // Create a message container
+            const messageDiv = document.createElement('div');
+            messageDiv.className = 'chat-message ai';
+            
+            const messageContent = document.createElement('div');
+            messageContent.className = 'message-content';
+            messageContent.innerHTML = `
+                <p>How many would you like to purchase?</p>
+                <input type="number" min="1" value="${currentQuantity}" class="quantity-input" />
+                <button class="confirm-button">Confirm Quantity</button>
+            `;
+            messageDiv.appendChild(messageContent);
+            messagesContainer.appendChild(messageDiv);
+
+            // Add event listener to the confirm button
+            const confirmButton = messageContent.querySelector('.confirm-button');
+            const quantityInput = messageContent.querySelector('.quantity-input');
+            confirmButton.onclick = () => {
+                currentQuantity = parseInt(quantityInput.value) || 1;
+                addMessage(`I want ${currentQuantity} units`, 'user');
+                window.parent.postMessage({ type: 'updateQuantity', quantity: currentQuantity }, '*');
+                showTypingIndicator();
+                setTimeout(() => {
+                    hideTypingIndicator();
+                    askPurchaseOption();
+                }, 600);
+            };
+
+            messagesContainer.scrollTop = messagesContainer.scrollHeight;
+        }
+
+        function handleQuantityOption(option) {
+            // This function is no longer needed with user input
+        }
+
+        function askPurchaseOption() {
+            const purchaseOptions = [
+                { text: "🛒 Add to Cart", value: "cart" },
+                { text: "💳 Buy Now", value: "buy" }
+            ];
+            
+            addMessageWithOptions("Would you like to add to cart or buy now?", purchaseOptions);
+        }
+
+        function handlePurchaseOption(option) {
+            if (option.value === "cart") {
+                window.parent.postMessage({ type: 'addToCart', quantity: currentQuantity, checkout: false }, '*');
+                addMessage("Great! I've added the items to your cart.", "ai");
+            } else if (option.value === "buy") {
+                window.parent.postMessage({ type: 'buyNow', quantity: currentQuantity, checkout: true }, '*');
+                addMessage("Perfect! Let's proceed to checkout.", "ai");
+            }
+        }
+
+        function getResponseForSelection(option) {
+            if (currentQuestion === 0) {
+                return option.value === "yes" ? 
+                    "Great! Let me help you with your purchase." : 
+                    "Alright! Let me know if you need any help later.";
+            }
+            return "";
+        }
+
+        function addMessageWithOptions(text, options) {
+            const messagesContainer = document.querySelector('.messages-container');
+            const messageDiv = document.createElement('div');
+            messageDiv.className = 'chat-message ai';
+            
+            // Only add avatar if last message was from user
+            const lastMessage = messagesContainer.lastElementChild;
+            if (!lastMessage || lastMessage.classList.contains('user')) {
+                const avatar = document.createElement('div');
+                avatar.className = 'avatar';
+                const icon = document.createElement('span');
+                icon.className = 'material-icons';
+                icon.textContent = 'psychology';
+                avatar.appendChild(icon);
+                messageDiv.appendChild(avatar);
+            }
+            
+            const messageContent = document.createElement('div');
+            messageContent.className = 'message-content';
+            
+            const questionText = document.createElement('div');
+            questionText.textContent = text;
+            messageContent.appendChild(questionText);
+            
+            const optionsContainer = document.createElement('div');
+            optionsContainer.className = 'options-container';
+            
+            options.forEach((option, index) => {
+                const button = document.createElement('button');
+                button.className = 'option-button';
+                button.textContent = option.text;
+                button.value = option.value;
+                button.onclick = () => selectOption(option, button, optionsContainer);
+                optionsContainer.appendChild(button);
+            });
+            
+            messageContent.appendChild(optionsContainer);
+            messageDiv.appendChild(messageContent);
+            
+            messagesContainer.appendChild(messageDiv);
+            messagesContainer.scrollTop = messagesContainer.scrollHeight;
+        }
+
+        function addMessage(text, type) {
+            if (type === 'ai') {
+                showTypingIndicator();
+
+                setTimeout(() => {
+                    hideTypingIndicator();
+                    displayMessage(text, type);
+                }, 1000); // Delay for 1 second before showing the message
+            } else {
+                displayMessage(text, type);
+            }
+        }
+
+        function displayMessage(text, type) {
+            const messagesContainer = document.querySelector('.messages-container');
+            const messageDiv = document.createElement('div');
+            messageDiv.className = `chat-message ${type}`;
+
+            const messageContent = document.createElement('div');
+            messageContent.className = 'message-content';
+            messageContent.textContent = text;
+
+            if (type === 'ai') {
+                const lastMessage = messagesContainer.lastElementChild;
+                if (!lastMessage || lastMessage.classList.contains('user')) {
+                    const avatar = document.createElement('div');
+                    avatar.className = 'avatar';
+                    const icon = document.createElement('span');
+                    icon.className = 'material-icons';
+                    icon.textContent = 'psychology';
+                    avatar.appendChild(icon);
+                    messageDiv.appendChild(avatar);
+                }
+            }
+
+            messageDiv.appendChild(messageContent);
+            messagesContainer.appendChild(messageDiv);
+            messagesContainer.scrollTop = messagesContainer.scrollHeight;
+        }
+
+        function showTypingIndicator() {
+            const messagesContainer = document.querySelector('.messages-container');
+            const existingIndicator = document.querySelector('.typing-indicator');
+            if (!existingIndicator) {
+                const indicatorDiv = document.createElement('div');
+                indicatorDiv.className = 'typing-indicator';
+
+                const avatar = document.createElement('div');
+                avatar.className = 'avatar';
+                const icon = document.createElement('span');
+                icon.className = 'material-icons';
+                icon.textContent = 'psychology';
+                avatar.appendChild(icon);
+                indicatorDiv.appendChild(avatar);
+
+                const dotsContainer = document.createElement('div');
+                dotsContainer.className = 'typing-dots';
+                for (let i = 0; i < 3; i++) {
+                    const dot = document.createElement('div');
+                    dot.className = 'typing-dot';
+                    dotsContainer.appendChild(dot);
+                }
+                indicatorDiv.appendChild(dotsContainer);
+
+                messagesContainer.appendChild(indicatorDiv);
+                messagesContainer.scrollTop = messagesContainer.scrollHeight;
+            }
+        }
+
+        function hideTypingIndicator() {
+            const typingIndicator = document.querySelector('.typing-indicator');
+            if (typingIndicator) {
+                typingIndicator.remove();
+            }
+        }
+
+        // Listen for message from parent window
+        window.addEventListener('message', function(event) {
+            if (event.data === 'startChat') {
+                startQuiz();
+            }
+        });
+    </script>
+</body>
+</html>
