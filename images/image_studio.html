@@ -1,0 +1,3602 @@
+{% load static %}
+
+{% block content %}
+<style>
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+
+    * {
+        scrollbar-width: none;
+        -ms-overflow-style: none;
+    }
+    
+    *::-webkit-scrollbar {
+        display: none;
+    }
+
+    body {
+        margin: 0;
+        padding: 0;
+        overflow: hidden;
+        font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+        background: #000;
+    }
+    
+    /* Credits display styling */
+    .credits-container {
+        position: fixed;
+        top: 14px;
+        right: 60px;
+        z-index: 10000;
+        background: #33333323;
+        backdrop-filter: blur(10px);
+        -webkit-backdrop-filter: blur(10px);
+        border-radius: 16px;
+        padding: 8px 16px;
+        box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        transform: translateY(0);
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        opacity: 0;
+        transform: translateY(-20px);
+        pointer-events: none;
+    }
+    
+    .credits-container.visible {
+        opacity: 1;
+        transform: translateY(0);
+        pointer-events: auto;
+    }
+    
+    .credits-container:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+        background: rgba(30, 30, 40, 0.8);
+    }
+    
+    .credits-container::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        border-radius: 16px;
+        padding: 1.5px;
+        background: linear-gradient(120deg, rgba(255, 255, 255, 0.3), rgba(255, 255, 255, 0.1), transparent, transparent);
+        -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+        -webkit-mask-composite: xor;
+        mask-composite: exclude;
+        pointer-events: none;
+    }
+    
+    /* Top navigation bar styles */
+    .top-nav-bar {
+        position: fixed;
+        top: -80px; /* Start off-screen */
+        left: 0;
+        right: 0;
+        height: 70px;
+        background: rgba(0, 0, 0, 0.7);
+        backdrop-filter: blur(10px);
+        -webkit-backdrop-filter: blur(10px);
+        z-index: 9999;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 0 30px;
+        transition: transform 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+        border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+    }
+
+    .top-nav-bar.visible {
+        transform: translateY(80px);
+    }
+
+    .nav-item {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        padding: 8px 16px;
+        border-radius: 12px;
+        color: rgba(255, 255, 255, 0.8);
+        font-size: 14px;
+        font-weight: 500;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        border: 1px solid transparent;
+        background: rgba(255, 255, 255, 0.05);
+        text-decoration: none; /* Removes underline */
+    }
+
+    .nav-item:hover {
+        background: rgba(255, 255, 255, 0.1);
+        border-color: var(--accent-color);
+        color: white;
+        transform: translateY(-2px);
+    }
+
+    .nav-item i {
+        font-size: 16px;
+        color: var(--accent-color);
+        opacity: 0.9;
+        transition: all 0.3s ease;
+    }
+
+    .nav-item:hover i {
+        transform: scale(1.1);
+        opacity: 1;
+    }
+
+    .nav-trigger-area {
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 20px;
+        z-index: 9998;
+        clip-path: polygon(
+            0 0, 
+            calc(50% - 130px) 0,  /* Left of mode switcher */
+            calc(50% - 130px) 70px,  /* Bottom of exclusion */
+            calc(50% + 130px) 70px,  /* Bottom of exclusion */
+            calc(50% + 130px) 0,  /* Right of mode switcher */
+            100% 0,
+            100% 100%,
+            0 100%
+        );
+    }
+    
+    /* Navigation bar layout styles */
+    .nav-left {
+        display: flex;
+        align-items: center;
+        gap: 15px;
+    }
+    
+    .mode-switcher {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        color: rgba(255, 255, 255, 0.8);
+        font-size: 14px;
+        position: absolute;
+        right: 120px; /* Position to the left of logout button */
+        transform: none; /* Remove the centering transform */
+    }
+    
+    .logout-btn {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        padding: 8px 6px;
+        border-radius: 12px;
+        color: rgba(255, 255, 255, 0.8);
+        font-size: 14px;
+        font-weight: 500;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        border: 1px solid transparent;
+        background: rgba(255, 255, 255, 0.05);
+        text-decoration: none;
+        margin-right: -20px;
+    }
+    
+    .logout-btn:hover {
+        background: rgba(255, 255, 255, 0.1);
+        border-color: var(--accent-color);
+        color: white;
+        transform: translateY(-2px);
+    }
+    
+    .credits-icon {
+        color: #FFD700;
+        font-size: 1.2rem;
+        margin-right: 4px;
+    }
+    
+    .credits-value {
+        font-weight: 700;
+        font-size: 1.1rem;
+        color: #ffffff;
+        text-shadow: 0 0 10px rgba(255, 215, 0, 0.3);
+    }
+    
+    .credits-label {
+        font-size: 0.98rem;
+        color: rgba(255, 255, 255, 0.7);
+        font-weight: 500;
+        letter-spacing: 0.5px;
+        margin-left: 2px;
+    }
+    
+    .placeholder-text-black::placeholder {
+        color: rgba(255, 255, 255, 0.9);
+        text-align: center;
+    }
+    
+    .placeholder-bold-text::placeholder {
+        font-weight: bold;
+    }
+
+    .studio-container {
+        position: relative;
+        width: 100%;
+        min-height: 100vh;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        background: transparent;
+        transition: all 1s cubic-bezier(0.4, 0, 0.2, 1);
+        overflow: hidden;
+    }
+
+    .studio-background {
+        position: absolute;
+        top: -50;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background-image: linear-gradient(rgba(255, 255, 255, 0.8) 1px, transparent 1px),
+                        linear-gradient(90deg, rgba(255, 255, 255, 0.8) 1px, transparent 1px);
+        background-size: 50px 50px;
+        background-position: center;
+        background-attachment: fixed;
+        z-index: -2;
+        opacity: 0;
+        transform: scale(1.2) perspective(1000px) rotateX(30deg);
+            transition: all 1.5s cubic-bezier(0.4, 0, 0.2, 1);
+        background-color: rgba(0, 0, 0, 0.8);
+        animation: initGridRotate 1800s linear infinite;
+    }
+
+    /* .studio-background.active {
+        animation: gridRotate 30s linear infinite;
+    } */
+
+    @keyframes gridRotate {
+        0% {
+            transform: rotate(0deg) scale(1) perspective(1000px) rotateX(30deg);
+        }
+        100% {
+            transform: rotate(360deg) scale(1) perspective(1000px) rotateX(30deg);
+        }
+    }
+
+    .studio-background.visible {
+        opacity: 1;
+        transform: scale(1);
+    }
+
+    .studio-gradient {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        z-index: -1;
+        background: transparent;
+    }
+
+    .image-container {
+        position: fixed;
+        width: 100vw;
+        height: 100vh;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        overflow: hidden;
+        z-index: 1000;
+        top: 0;
+        left: 0;
+        padding: 20px;
+        box-sizing: border-box;
+    }
+
+    .main-image {
+        width: auto;
+        max-width: calc(100vw - 40px);
+        height: auto;
+        max-height: calc(100vh - 40px);
+        object-fit: contain;
+        cursor: move;
+        box-shadow: 0 0 30px rgba(0, 0, 0, 0.3);
+        transform-origin: center center;
+        transition: all 0.8s cubic-bezier(0.4, 0, 0.2, 1);
+        z-index: 0;
+        position: absolute;
+        /* left: 50%;
+        top: 50%; */
+        transform: translate(-50%, -50%);
+    }
+
+    .controls-background {
+        position: fixed;
+        bottom: 30px;
+        left: 50%;
+        transform: translateX(-50%);
+        width: 50%;
+        min-width: 600px;
+        height: 160px;
+        background: rgba(0, 0, 0, 0.5);
+        backdrop-filter: blur(10px);
+        -webkit-backdrop-filter: blur(10px);
+        border-radius: 20px;
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        opacity: 0;
+        transition: opacity 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+        z-index: 5000;
+    }
+
+    .controls-background.visible {
+        opacity: 1;
+    }
+
+    .controls-container {
+        position: fixed;
+        bottom: 60px;
+        left: 50%;
+        transform: translateX(-50%) translateY(180px);
+        display: flex;
+        align-items: center;
+        gap: 100px;
+        z-index: 5000;
+        transition: transform 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    .controls-container.visible {
+        transform: translateX(-50%) translateY(0);
+    }
+
+    .step-button {
+        position: relative;
+        width: 60px;
+        height: 60px;
+        border-radius: 50%;
+        background: rgba(255, 255, 255, 0.1);
+        border: 2px solid rgba(255, 255, 255, 0.2);
+        color: white;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+        transform-origin: center;
+        font-size: 24px;
+        z-index: 2;
+    }
+
+    .step-button i {
+        transition: all 0.3s ease;
+        color: white;  /* Default color for incomplete steps */
+    }
+
+    .step-button.active i,
+    .step-button.completed i {
+        color: var(--accent-color);  /* Accent color for active/completed steps */
+    }
+
+    .step-button:hover i {
+        transform: scale(1.1);
+    }
+
+    .step-button::before {
+        content: '';
+        position: absolute;
+        width: 100%;
+        height: 100%;
+        border-radius: 50%;
+        background: rgba(255, 255, 255, 0.1);
+        transform: scale(0);
+        transition: transform 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    .step-progress {
+        position: absolute;
+        left: calc(100% + 2px);
+        top: 50%;
+        width: 100px;
+        height: 2px;
+        background: rgba(255, 255, 255, 0.2);
+        transform-origin: left center;
+        transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    .step-button.active .step-progress {
+        width: calc(4.3rem - 2px);  
+        transform: scaleY(1.5);  
+    }
+
+    .step-progress::after {
+        content: '';
+        position: absolute;
+        left: 0;
+        top: 0;
+        height: 100%;
+        width: 0%;
+        background: var(--accent-color);
+        transition: width 0.5s ease;
+        box-shadow: 0 0 10px var(--accent-color);
+    }
+
+    .step-button.active ~ .step-button .step-progress::after {
+        width: 0%;
+    }
+
+    .step-button.active .step-progress::after,
+    .step-button.completed .step-progress::after {
+        width: 100%;
+    }
+
+    .step-button.active {
+        transform: scale(1.3);
+        border-color: var(--accent-color);
+        background: rgba(245, 158, 11, 0.15);  
+        box-shadow: 0 0 20px rgba(245, 158, 11, 0.3);  
+    }
+
+    .step-label {
+        position: absolute;
+        top: -30px;
+        left: 50%;
+        transform: translateX(-50%);
+        white-space: nowrap;
+        color: white;
+        font-size: 14px;
+        text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+    }
+
+    .ripple-container {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100vw;
+        height: 100vh;
+        pointer-events: none;
+        z-index: 9999;
+        overflow: hidden;
+    }
+
+    .ripple {
+        position: absolute;
+        width: 100px;  /* Fixed initial size */
+        height: 100px; /* Fixed initial size */
+        border-radius: 50%;
+        background: radial-gradient(circle at center, 
+                                  rgba(255, 191, 0, 0.35) 0%, 
+                                  transparent 75%);
+        transform: translate(-50%, -50%);  /* Center at click point */
+        pointer-events: none;
+        animation: ripple-expand 1.2s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+    }
+
+    @keyframes ripple-expand {
+        to {
+            width: 40vmax;  /* Use vmax to ensure circle covers screen */
+            height: 40vmax; /* Use vmax to ensure circle covers screen */
+            opacity: 0;
+        }
+    }
+
+    .tools-panel {
+        position: fixed;
+        left: -400px;
+        top: 20px;
+        bottom: 80px; /* Match with controls container's bottom position */
+        width: 300px;
+        background: rgba(0, 0, 0, 0.5);
+        backdrop-filter: blur(10px);
+        -webkit-backdrop-filter: blur(20px);
+        color: white;
+        padding: 25px;
+        transition: transform 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+        z-index: 5000;
+        border-radius: 24px;
+        margin-left: 20px;
+        box-shadow: 0 4px 30px rgba(0, 0, 0, 0.3);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        display: flex;
+        flex-direction: column;
+        overflow: hidden; /* Add this to contain all content */
+        height: calc(100% - 100px); /* Adjust height to account for new bottom position */
+    }
+
+    .tools-panel.active {
+        transform: translateX(400px);
+    }
+
+    .panel-header {
+        font-size: 22px;
+        font-weight: 600;
+        margin-bottom: 25px;
+        padding-bottom: 15px;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        color: rgba(255, 255, 255, 0.95);
+        flex-shrink: 0; /* Prevent header from shrinking */
+    }
+
+    .panel-option {
+        padding: 12px 16px;
+        margin: 4px 0; /* Reduce margin between options */
+        background: rgba(255, 255, 255, 0.05);
+        border-radius: 12px;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        border: 1px solid transparent;
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        font-size: 14px;
+        color: rgba(255, 255, 255, 0.8);
+        transform: none; /* Remove transform on hover */
+        white-space: nowrap; /* Keep text on single line */
+        overflow: hidden; /* Hide overflow text */
+        text-overflow: ellipsis; /* Show ellipsis for overflow */
+        width: calc(100% - 32px); /* Account for padding */
+        z-index: 5001;
+        position: relative;
+    }
+    
+    /* Adjustment slider styles */
+    .panel-option.adjustment-slider {
+        position: relative;
+        overflow: visible;
+        cursor: pointer;
+    }
+
+    .slider-container {
+        position: absolute;
+        top: 0;
+        left: 0;
+        height: 100%;
+        background-color: rgba(240, 100, 0, 0.2);
+        border-radius: 12px;
+        pointer-events: none;
+        z-index: -1;
+        transition: width 0.2s ease;
+    }
+
+    .slider-value {
+        margin-left: auto;
+        font-size: 12px;
+        color: rgba(255, 255, 255, 0.7);
+    }
+
+    .reset-button {
+        background: none;
+        border: none;
+        color: rgba(255, 255, 255, 0.5);
+        cursor: pointer;
+        font-size: 12px;
+        padding: 2px 6px;
+        border-radius: 4px;
+        margin-left: 8px;
+        transition: all 0.2s ease;
+        display: none;
+    }
+
+    .reset-button:hover {
+        background: rgba(255, 255, 255, 0.1);
+        color: rgba(255, 255, 255, 0.8);
+    }
+
+    .panel-option.has-value .reset-button {
+        display: block;
+    }
+    
+    .slider-container {
+        position: absolute;
+        top: 0;
+        left: 0;
+        height: 100%;
+        background-color: rgba(240, 100, 0, 0.2);
+        border-radius: 12px;
+        pointer-events: none;
+        z-index: -1;
+        transition: width 0.2s ease;
+    }
+    
+    .slider-value {
+        margin-left: auto;
+        font-size: 12px;
+        color: rgba(255, 255, 255, 0.7);
+    }
+    
+    .reset-button {
+        background: none;
+        border: none;
+        color: rgba(255, 255, 255, 0.5);
+        cursor: pointer;
+        font-size: 12px;
+        padding: 2px 6px;
+        border-radius: 4px;
+        margin-left: 8px;
+        transition: all 0.2s ease;
+        display: none;
+    }
+    
+    .reset-button:hover {
+        background: rgba(255, 255, 255, 0.1);
+        color: rgba(255, 255, 255, 0.8);
+    }
+    
+    .panel-option.has-value .reset-button {
+        display: block;
+    }
+
+    .panel-option i {
+        font-size: 16px;
+        color: var(--accent-color);
+        opacity: 0.9;
+        transition: all 0.3s ease;
+    }
+
+    .panel-option:hover i {
+        transform: scale(1.1);
+        opacity: 1;
+    }
+
+    .panel-option:hover {
+        background: rgba(255, 255, 255, 0.1);
+        border-color: var(--accent-color);
+        /* transform: translateX(5px); */
+        color: white;
+        transform: none; /* Remove transform */
+        /* padding-left: 20px; Add slight indent on hover instead */
+    }
+
+    .panel-section {
+        margin-bottom: 25px;
+        width: 100%;
+    }
+
+    .panel-section-title {
+        font-size: 14px;
+        color: rgba(255, 255, 255, 0.5);
+        margin-bottom: 12px;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+    }
+
+    .zoom-controls {
+        position: fixed;
+        bottom: 30px;
+        right: 30px;
+        display: flex;
+        gap: 12px;
+        z-index: 5001;
+    }
+
+    .zoom-btn {
+        width: 45px;
+        height: 45px;
+        border: none;
+        border-radius: 50%;
+        background: rgba(255, 255, 255, 0.1);
+        color: white;
+        font-size: 22px;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        border: 1px solid rgba(255, 255, 255, 0.2);
+    }
+
+    .zoom-btn:hover {
+        background: rgba(255, 255, 255, 0.15);
+        border-color: var(--accent-color);
+        transform: translateY(-2px);
+    }
+    
+    /* Grid overlay styles */
+    .image-grid-overlay {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        pointer-events: none;
+        z-index: 1001;
+        background-image: linear-gradient(rgba(255, 255, 255, 0.8) 1px, transparent 1px),
+                          linear-gradient(90deg, rgba(255, 255, 255, 0.8) 1px, transparent 1px);
+        background-size: 10px 10px;
+        background-position: center;
+        opacity: 0.7;
+        transform-origin: center center;
+        /* Removed fixed clip-path to adjust automatically to image dimensions */
+    }
+    
+    /* Canvas overlay styles */
+    .image-canvas-overlay {
+        position: absolute;
+        top: 37.5%;
+        left: 37.5%;
+        pointer-events: auto;
+        z-index: 1002; /* Above grid but below UI */
+        transform-origin: center center;
+        clip-path: inset(1=0px 20px 25px 20px); /* top right bottom left */
+    }
+
+    .image-selection {
+        position: fixed;
+        width: 100vw;
+        height: 100vh;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        gap: 2rem;
+        opacity: 1;
+        visibility: visible;
+        transition: opacity 0.5s ease, visibility 0.5s ease;
+        z-index: 1;
+        overflow: hidden;
+        transition: transform 0.8s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    .image-selection::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background-image: linear-gradient(
+          rgba(0, 0, 0, 0.8), 
+          rgba(0, 0, 0, 0.8)
+        ),url('{% static "studio_background.jpg" %}');
+        background-size: cover;
+        background-position: center;
+        filter: blur(10px);
+        transform: scale(1.1);
+        z-index: -2;
+        width: 100vw; /* Add explicit width */
+        height: 100vh; /* Add explicit height */
+    }
+
+    .image-selection.hidden {
+        opacity: 0;
+        visibility: hidden;
+    }
+
+    .image-selection.slide-out {
+        transform: translateY(-100%);
+    }
+
+    .selection-option {
+        width: 20rem;
+        padding: 1.2rem 2rem;
+        border-radius: 1rem;
+        background: rgba(255, 255, 255, 0.1);
+        border: 1px solid rgba(255, 255, 255, 0.2);
+        color: white;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 1rem;
+        font-size: 1.1rem;
+        backdrop-filter: blur(5px);
+        -webkit-backdrop-filter: blur(5px);
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    }
+
+    .selection-option i {
+        font-size: 1.3rem;
+        color: var(--accent-color);
+    }
+
+    .selection-option:hover {
+        background: rgba(255, 255, 255, 0.15);
+        border-color: var(--accent-color);
+        transform: translateY(-2px);
+    }
+
+    .library-container {
+        position: fixed;
+        bottom: -100vh;
+        left: 0;
+        right: 0;
+        height: 80vh;
+        background: rgba(0, 0, 0, 0.8);
+        backdrop-filter: blur(20px);
+        border-radius: 24px 24px 0 0;
+        padding: 2rem;
+        transition: transform 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+        z-index: 3000; /* Increase z-index to be above all popups */
+        border-top: 1px solid rgba(255, 255, 255, 0.1);
+    }
+
+    .library-container.active {
+        transform: translateY(-100%);
+    }
+
+    .library-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 2rem;
+        color: white;
+    }
+
+    .library-close {
+        cursor: pointer;
+        padding: 0.5rem;
+        font-size: 1.5rem;
+        color: rgba(255, 255, 255, 0.8);
+        transition: color 0.3s ease;
+    }
+
+    .library-close:hover {
+        color: white;
+    }
+
+    .library-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+        gap: 1rem;
+        overflow-y: auto;
+        height: calc(100% - 4rem);
+        padding: 0.5rem;
+    }
+
+    .library-item {
+        aspect-ratio: 1;
+        border-radius: 12px;
+        overflow: hidden;
+        cursor: pointer;
+        border: 2px solid transparent;
+        transition: all 0.3s ease;
+    }
+
+    .library-item:hover {
+        border-color: var(--accent-color);
+        transform: scale(1.05);
+    }
+
+    .library-item img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+    }
+
+    .panel-section-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        cursor: pointer;
+        padding: 8px 0;
+        z-index: 6000;
+    }
+
+    .panel-section-title {
+        font-size: 14px;
+        color: rgba(255, 255, 255, 0.5);
+        text-transform: uppercase;
+        letter-spacing: 1px;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        transition: transform 0.3s ease;
+    }
+
+    .panel-section.expanded .panel-section-title i {
+        transform: rotate(90deg);
+    }
+
+    .panel-section-content {
+        max-height: 0;
+        overflow: hidden;
+        transition: max-height 0.3s ease-out;
+        position: relative;
+        height: calc(100% - 45px); /* Subtract header height */
+    }
+
+    .panel-section.expanded .panel-section-content {
+        max-height: 360px;
+        overflow: hidden;
+    }
+
+    .scroll-indicator {
+        position: absolute;
+        left: 50%;
+        transform: translateX(-50%);
+        width: 32px;
+        height: 32px;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        opacity: 0;
+        transition: opacity 0.3s ease;
+        pointer-events: none;
+        z-index: 2;
+        background: radial-gradient(circle, 
+            rgba(0, 0, 0, 0.8) 0%,
+            rgba(0, 0, 0, 0.6) 50%,
+            rgba(0, 0, 0, 0) 100%);
+        border-radius: 50%;
+    }
+
+    .scroll-indicator.top {
+        top: 8px;
+        transform: translateX(-50%) rotate(180deg);
+    }
+
+    .scroll-indicator.bottom {
+        bottom: 8px;
+        transform: translateX(-50%);
+    }
+
+    .scroll-indicator i {
+        color: white;
+        font-size: 14px;
+        filter: drop-shadow(0 2px 3px rgba(0, 0, 0, 0.2));
+    }
+
+    .scroll-container {
+        max-height: none; /* Remove max-height limitation */
+        overflow-y: auto;
+        scrollbar-width: none;
+        -ms-overflow-style: none;
+        position: relative;
+        width: 100%;
+        padding-right: 4px; /* Add small padding to prevent content touching edge */
+        height: 100%;
+        padding-bottom: 16px; /* Ensure consistent spacing at the bottom of scrollable content */
+    }
+
+    .scroll-container::-webkit-scrollbar {
+        display: none;
+    }
+
+    .filters-grid {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 12px;
+        padding: 4px 4px 24px 0px; /* Changed left padding from 4px to 0px */
+        width: calc(100% - 4px); /* Updated to account for right padding only */
+        height: 100%; /* Take full height */
+        grid-template-rows: auto;
+        align-content: start; /* Align grid items from the top */
+    }
+
+    .filter-option {
+        position: relative;
+        aspect-ratio: 1;
+        border-radius: 8px;
+        overflow: hidden;
+        cursor: pointer;
+        border: 2px solid transparent;
+        transition: all 0.3s ease;
+    }
+
+    .filter-option img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        transition: filter 0.3s ease-out;  /* Add transition for filter previews */
+    }
+
+    .filter-option:hover {
+        border-color: var(--accent-color);
+        transform: translateY(-2px);
+    }
+
+    .filter-option.active {
+        border-color: var(--accent-color);
+        box-shadow: 0 0 15px rgba(255, 191, 0, 0.3);
+    }
+
+    .filter-name {
+        position: absolute;
+        bottom: 8px;
+        left: 8px;
+        right: 8px;
+        text-align: center;
+        background: rgba(0, 0, 0, 0.6);
+        color: white;
+        padding: 4px 8px;
+        border-radius: 4px;
+        font-size: 12px;
+        backdrop-filter: blur(4px);
+    }
+
+    .panel-sections-container {
+        display: flex;
+        flex-direction: column;
+        gap: 16px;
+        padding: 8px 0;
+        height: calc(100% - 70px); /* Adjust for header height */
+        overflow-y: auto;
+        padding-bottom: 0; /* Remove bottom padding */
+    }
+
+    .panel-section {
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+        min-height: unset;
+        flex: unset;
+        height: auto;
+    }
+
+    .panel-section-title {
+        margin-bottom: 8px;
+    }
+
+    .panel-options-container {
+        display: flex;
+        flex-direction: column;
+        gap: 4px;
+    }
+
+    .panel-option {
+        margin: 0;
+        z-index: 6000;
+    }
+
+    /* Remove flex-related styles that were causing issues */
+    .panel-section.expanded {
+        flex: unset;
+        height: auto;
+    }
+
+    .panel-section-content {
+        height: auto;
+    }
+
+    /* Editor panel specific styles */
+    #editorTools .panel-sections-container {
+        display: flex;
+        flex-direction: column;
+        height: calc(100% - 80px);
+        overflow: hidden;
+    }
+
+    #editorTools .panel-section {
+        transition: flex 0.3s ease-out;
+        flex: 0;
+        min-height: 45px;
+        margin-bottom: 0;
+    }
+
+    #editorTools .panel-section.expanded {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+    }
+
+    #editorTools .panel-section.expanded .panel-section-content {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        overflow: hidden;
+        max-height: none;
+    }
+
+    #editorTools .scroll-container {
+        flex: 1;
+        overflow-y: auto;
+        padding: 4px;
+    }
+
+    /* Remove these properties from the global styles */
+    .panel-sections-container {
+        padding: 0;
+        gap: 0;
+        overflow-y: visible;
+    }
+
+    .panel-section {
+        margin-bottom: 25px;
+    }
+
+    /* Adjustment menu specific styles */
+    #editorTools .scroll-container {
+        padding: 8px;
+    }
+
+    #editorTools .panel-option {
+        padding: 10px;
+        margin-bottom: 4px;
+        background: rgba(255, 255, 255, 0.05);
+        border-radius: 12px;
+        gap: 16px;
+    }
+
+    #editorTools .panel-option i {
+        font-size: 18px;
+        width: 24px;
+        text-align: center;
+    }
+
+    #editorTools .panel-option:first-child {
+        margin-top: 0;
+    }
+
+    #editorTools .panel-option:last-child {
+        margin-bottom: 0;
+    }
+
+    #editorTools .panel-section-content {
+        padding-bottom: 4px;
+    }
+
+    /* Popup styles */
+    .popup-overlay {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100vw;
+        height: 100vh;
+        background: rgba(0, 0, 0, 0.3);
+        backdrop-filter: blur(10px);
+        -webkit-backdrop-filter: blur(10px);
+        opacity: 0;
+        visibility: hidden;
+        transition: all 0.3s ease;
+        z-index: 2000;
+    }
+
+    .popup-overlay.active {
+        opacity: 1;
+        visibility: visible;
+    }
+
+    .generate-popup,
+    .custom-bg-popup {
+        position: fixed;
+        background: rgba(20, 20, 20, 0.504);
+        backdrop-filter: blur(20px);
+        -webkit-backdrop-filter: blur(20px);
+        border-radius: 20px;
+        padding: 32px;
+        width: 600px; /* Adjust width for generate-popup */
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+        transform: scale(0.9) translateY(20px);
+        opacity: 0;
+        transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+        z-index: 2001;
+        bottom: 240px;
+        left: 50%;
+        transform: translateX(-50%) scale(0.9);
+        backdrop-filter: blur(10px); /* Add background blur */
+        -webkit-backdrop-filter: blur(10px); /* Add background blur for Safari */
+    }
+
+    .generate-popup.active,
+    .custom-bg-popup.active {
+        transform: translateX(-50%) scale(1);
+        opacity: 1;
+    }
+
+    .generate-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 24px;
+    }
+
+    .generate-title {
+        margin: 0;
+        color: white;
+        font-size: 20px;
+        font-weight: 600;
+    }
+
+    .generate-input-group {
+        position: relative;
+        margin-bottom: 20px;
+    }
+
+    .generate-input {
+        width: 100%;
+        padding: 16px;
+        border-radius: 12px;
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        background: rgba(255, 255, 255, 0.05);
+        color: white;
+        font-size: 15px;
+        transition: all 0.3s ease;
+        margin-bottom: 16px;
+    }
+
+    .generate-input:focus {
+        border-color: var(--accent-color);
+        outline: none;
+        background: rgba(255, 255, 255, 0.08);
+    }
+
+    .generate-options {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 12px;
+        margin-bottom: 24px;
+    }
+
+    .generate-option {
+        padding: 12px;
+        border-radius: 10px;
+        background: rgba(255, 255, 255, 0.03);
+        backdrop-filter: blur(5px);
+        -webkit-backdrop-filter: blur(5px);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        color: white;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        font-size: 14px;
+    }
+
+    .generate-option.active {
+        background: rgba(255, 191, 0, 0.15);
+        border-color: var(--accent-color);
+        backdrop-filter: blur(10px);
+        -webkit-backdrop-filter: blur(10px);
+    }
+
+    .generate-option:hover {
+        background: rgba(255, 255, 255, 0.1);
+        border-color: var(--accent-color);
+    }
+
+    .generate-buttons {
+        display: flex;
+        gap: 12px;
+    }
+
+    .generate-button {
+        flex: 1;
+        padding: 14px;
+        border-radius: 12px;
+        border: none;
+        font-weight: 600;
+        font-size: 15px;
+        cursor: pointer;
+        transition: all 0.3s ease;
+    }
+
+    .generate-button.primary {
+        background: var(--accent-color);
+        color: black;
+    }
+
+    .generate-button.secondary {
+        background: rgba(255, 255, 255, 0.1);
+        color: white;
+        border: 1px solid rgba(255, 255, 255, 0.2);
+    }
+
+    .generate-button:hover {
+        transform: translateY(-2px);
+    }
+
+    .generate-button.primary:hover {
+        box-shadow: 0 4px 12px rgba(255, 191, 0, 0.3);
+    }
+
+    .example-prompts {
+        margin-top: 16px;
+    }
+
+    .example-label {
+        color: rgba(255, 255, 255, 0.5);
+        font-size: 13px;
+        margin-bottom: 8px;
+    }
+
+    .example-chips {
+        display: flex;
+        gap: 8px;
+        flex-wrap: wrap;
+    }
+
+    .example-chip {
+        padding: 6px 12px;
+        border-radius: 100px;
+        background: rgba(255, 255, 255, 0.05);
+        color: rgba(255, 255, 255, 0.8);
+        font-size: 13px;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        border: 1px solid transparent;
+    }
+
+    .example-chip:hover {
+        background: rgba(255, 255, 255, 0.1);
+        border-color: var(--accent-color);
+    }
+    
+    /* Add Text popup styles */
+    .text-options {
+        margin-bottom: 20px;
+        display: flex;
+        flex-wrap: wrap;
+        gap: 15px;
+    }
+    
+    .text-option {
+        flex: 1 1 calc(33% - 15px);
+        min-width: 120px;
+    }
+    
+    .text-option label {
+        display: block;
+        margin-bottom: 8px;
+        color: rgba(255, 255, 255, 0.8);
+        font-size: 14px;
+    }
+    
+    .text-select {
+        width: 100%;
+        padding: 10px;
+        border-radius: 8px;
+        background: rgba(255, 255, 255, 0.1);
+        border: 1px solid rgba(255, 255, 255, 0.2);
+        color: rgb(0, 0, 0);
+        font-size: 14px;
+    }
+    
+    .text-range {
+        width: 100%;
+        background: rgba(255, 255, 255, 0.1);
+        border-radius: 8px;
+        height: 6px;
+        -webkit-appearance: none;
+        margin-bottom: 8px;
+    }
+    
+    .text-range::-webkit-slider-thumb {
+        -webkit-appearance: none;
+        width: 18px;
+        height: 18px;
+        border-radius: 50%;
+        background: var(--accent-color);
+        cursor: pointer;
+    }
+    
+    .text-color-picker {
+        -webkit-appearance: none;
+        width: 100%;
+        height: 40px;
+        border-radius: 8px;
+        border: none;
+        cursor: pointer;
+        background: transparent;
+    }
+    
+    .text-color-picker::-webkit-color-swatch {
+        border-radius: 8px;
+        border: 1px solid rgba(255, 255, 255, 0.2);
+    }
+    
+    .draggable-text {
+        position: absolute;
+        cursor: move;
+        user-select: none;
+        padding: 5px;
+        z-index: 6000;
+    }
+
+    .custom-bg-popup {
+        position: fixed;
+        background: rgba(20, 20, 20, 0.7);
+        backdrop-filter: blur(20px);
+        -webkit-backdrop-filter: blur(20px);
+        border-radius: 20px;
+        padding: 32px;
+        width: 400px;
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+        transform: scale(0.9) translateY(20px);
+        opacity: 0;
+        transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+        z-index: 2001;
+        bottom: 240px;
+        left: 50%;
+        transform: translateX(-50%) scale(0.9);
+    }
+
+    .custom-bg-popup.active {
+        transform: translateX(-50%) scale(1);
+        opacity: 1;
+    }
+
+    .custom-bg-option {
+        padding: 16px;
+        border-radius: 12px;
+        background: rgba(255, 255, 255, 0.03);
+        backdrop-filter: blur(5px);
+        -webkit-backdrop-filter: blur(5px);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        color: white;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        margin-bottom: 12px;
+    }
+
+    .custom-bg-option:hover {
+        background: rgba(255, 255, 255, 0.1);
+        border-color: var(--accent-color);
+        transform: translateY(-2px);
+    }
+
+    .custom-bg-option i {
+        font-size: 20px;
+        color: var(--accent-color);
+    }
+
+    /* Updated Mode Switcher Styles - for panels, not navbar */
+    .studio-container .mode-switcher1 {
+        margin-top: 2rem;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 0.75rem;
+        position: static;
+        transform: none;
+    }
+
+    .mode-label {
+        color: rgba(255, 255, 255, 0.7);
+        font-size: 0.85rem;
+        font-weight: 500;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+    }
+
+    .mode-options {
+        display: flex;
+        gap: 1rem;
+        padding: 0.5rem;
+        background: rgba(0, 0, 0, 0);
+        border-radius: 12px;
+    }
+
+    .mode-option {
+        cursor: pointer;
+        position: relative;
+    }
+
+    .mode-option input {
+        position: absolute;
+        opacity: 0;
+        cursor: pointer;
+    }
+
+    .mode-content {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 0.5rem;
+        padding: 1rem 1.5rem;
+        background: rgba(255, 255, 255, 0.05);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        border-radius: 20px;
+        transition: all 0.3s ease;
+        margin: 8px;
+        width: 8rem;
+    }
+
+    .mode-content i {
+        font-size: 1.5rem;
+        color: white; 
+        transition: transform 0.3s ease; /* Remove color transition */
+    }
+
+    .mode-content span {
+        color: white;
+        font-weight: 500;
+        font-size: 0.95rem;
+    }
+
+    .mode-content small {
+        color: rgba(255, 255, 255, 0.5);
+        font-size: 0.75rem;
+        text-align: center;
+        line-height: 1.2;
+    }
+
+    .mode-option input:checked + .mode-content {
+        background: rgba(255, 191, 0, 0.15);
+        border-color: var(--accent-color);
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+    }
+
+    .mode-option input:checked + .mode-content i {
+        transform: scale(1.1); /* Remove color change, keep only scale effect */
+        color: white; /* Keep icon white even when selected */
+    }
+
+    .mode-option:hover .mode-content {
+        background: rgba(255, 255, 255, 0.1);
+        transform: translateY(-2px);
+    }
+
+    .mode-option:hover .mode-content i {
+        color: white; /* Keep icon white on hover */
+    }
+
+    /* Mode switch styles */
+    .mode-switch {
+        position: relative;
+        display: inline-block;
+        width: 220px;
+        height: 35px;
+        margin: 0;  /* Remove margin */
+    }
+    
+    .mode-switch input {
+        opacity: 0;
+        width: 0;
+        height: 0;
+    }
+    
+    .slider {
+        position: absolute;
+        cursor: pointer;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background-color: #33333323;
+        transition: .4s;
+        border-radius: 34px;
+        border: 1px solid rgba(255, 255, 255, 0.2);
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 0 20px;
+        font-weight: 500;
+        color: white;
+        -webkit-backdrop-filter: blur(10px);
+        backdrop-filter: blur(10px);
+    }
+    
+    .slider .auto-text,
+    .slider .manual-text {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        z-index: 1;
+        transition: .4s;
+    }
+    
+    .slider .auto-text i,
+    .slider .manual-text i {
+        color: white;
+    }
+    
+    .slider:before {
+        position: absolute;
+        content: "";
+        height: 28px;
+        width: 110px;
+        left: 2px;
+        right: 4px;
+        bottom: 3px;
+        background-color: rgba(240, 100, 0, 0.656);
+        transition: .4s;
+        border-radius: 30px;
+        box-shadow: 0 0 5px rgba(0, 0, 0, 0.2);
+    }
+    
+    input:checked + .slider:before {
+        transform: translateX(104px);
+    }
+    
+    input:checked + .slider .auto-text {
+        color: rgba(255, 255, 255, 0.7);
+    }
+    
+    input:checked + .slider .manual-text {
+        color: white;
+    }
+    
+    input:not(:checked) + .slider .auto-text {
+        color: white;
+    }
+    
+    input:not(:checked) + .slider .manual-text {
+        color: rgba(255, 255, 255, 0.7);
+    }
+    
+    /* Old loading switch styles - keep for reference */
+    .switch {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: var(--dominant-color);
+        display: none;
+        justify-content: center;
+        align-items: center;
+        z-index: 1000;
+    }
+
+    .init-page {
+        position: fixed;
+        top: 0;
+        right: 0;
+        width: 100vw;
+        height: 100vh;
+        display: none;
+        justify-content: flex-end;
+        align-items: center;
+        background: rgba(0, 0, 0, 0);
+        backdrop-filter: blur(10px);
+        opacity: 0;
+        visibility: hidden;
+        transform: translateX(0);
+        transition: all 0.8s cubic-bezier(0.4, 0, 0.2, 1);
+        z-index: 1000;
+        padding-right: 5%;
+        overflow: hidden;
+    }
+
+    .init-page::before {
+        content: '';
+        position: fixed;
+        top: -100vh;
+        left: -100vw;
+        width: 300vw;
+        height: 300vh;
+        background-image: linear-gradient(rgba(255, 255, 255, 0.4) 1px, transparent 1px),
+                        linear-gradient(90deg, rgba(255, 255, 255, 0.4) 1px, transparent 1px);
+        background-size: 50px 50px;
+        background-position: center;
+        background-attachment: fixed;
+        z-index: -1;
+        opacity: 0.3;
+        transform: scale(1.2) perspective(1000px) rotateX(30deg);
+        transition: all 1.5s cubic-bezier(0.4, 0, 0.2, 1);
+        animation: initGridRotate 60s linear infinite;
+    }
+
+    @keyframes initGridRotate {
+        0% { transform: scale(1.2) perspective(1000px) rotateX(30deg) translateY(0); }
+        100% { transform: scale(1.2) perspective(1000px) rotateX(30deg) translateY(-50px); }
+    }
+
+    .init-page.active {
+        opacity: 1;
+        visibility: visible;
+        display: flex;
+    }
+
+    .init-page.slide-out {
+        opacity: 0;
+    }
+
+    .init-page.slide-out::before {
+        opacity: 0.15;
+    }
+
+    .init-content {
+        background: rgba(0, 0, 0, 0.5);
+        backdrop-filter: blur(10px);
+        padding: 2rem;
+        border-radius: 20px;
+        width: 500px;
+        color: white;
+        text-align: center;
+        transform: translateY(20px);
+        opacity: 0;
+        transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    .init-page.active .init-content {
+        transform: translateY(0);
+        opacity: 1;
+    }
+
+    .init-page.slide-out .init-content {
+        transform: translateX(100%);
+        opacity: 0;
+    }
+
+    .card {
+        --bg-color: rgba(0, 0, 0, 0.5);
+        background-color: var(--bg-color);
+        padding: 1rem 2rem;
+        border-radius: 1.25rem;
+        backdrop-filter: blur(10px);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        
+    }
+
+    .loader {
+        color: rgb(124, 124, 124);
+        font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+        font-weight: 500;
+        font-size: 25px;
+        box-sizing: content-box;
+        height: 40px;
+        padding: 10px 10px;
+        display: flex;
+        border-radius: 8px;
+    }
+
+    .words {
+        overflow: hidden;
+        position: relative;
+    }
+
+    .words::after {
+        content: "";
+        position: absolute;
+        inset: 0;
+        background: linear-gradient(
+            var(--bg-color) 10%,
+            transparent 30%,
+            transparent 70%,
+            var(--bg-color) 90%
+        );
+        z-index: 20;
+    }
+
+    .word {
+        display: block;
+        height: 100%;
+        padding-left: 6px;
+        color: var(--accent-color);
+        animation: spin_4991 7.5s forwards;
+    }
+
+    .word::after {
+        content: '';
+        display: inline-block;
+        animation: dotBounce 1.5s steps(1, end) infinite;
+    }
+
+    @keyframes spin_4991 {
+        0%, 30% {
+            transform: translateY(0);
+            opacity: 1;
+        }
+        33%, 63% {
+            transform: translateY(-100%);
+            opacity: 1;
+        }
+        66%, 96% {
+            transform: translateY(-200%);
+            opacity: 1;
+        }
+        100% {
+            transform: translateY(-300%);
+            opacity: 0;
+        }
+    }
+
+    @keyframes dotBounce {
+        0%, 25% { content: '.'; }
+        26%, 50% { content: '..'; }
+        51%, 75% { content: '...'; }
+        76%, 100% { content: '....'; }
+    }
+
+    .init-step.active {
+        opacity: 1;
+        transform: translateX(0);
+    }
+
+    .init-step i {
+        opacity: 0;
+        transform: scale(0.8);
+        transition: all 0.3s ease;
+    }
+
+    .init-step.done i {
+        opacity: 1;
+        transform: scale(1);
+        color: #22c55e;
+    }
+
+    .init-step .loading-dots {
+        display: inline-block;
+        width: 50px;
+        text-align: left;
+        opacity: 0;
+        transition: opacity 0.3s ease;
+    }
+
+    .init-step.loading .loading-dots {
+        opacity: 1;
+    }
+
+    @keyframes dotAnimation {
+        0%, 20% { content: '.'; }
+        40%, 60% { content: '..'; }
+        80%, 100% { content: '...'; }
+    }
+
+    .init-step .loading-dots::after {
+        content: '';
+        display: inline-block;
+        animation: dotAnimation 1.5s infinite;
+    }
+
+    .magic-eraser-option {
+        margin-top: 2rem;
+        padding: 1.5rem;
+        background: rgba(255, 255, 255, 0.05);
+        border-radius: 15px;
+        display: none;
+        opacity: 0;
+        transform: translateY(20px);
+        transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    .success-message {
+        display: none;
+        color: var(--accent-color);
+        font-size: 25px;
+        opacity: 0;
+        transform: scale(0.9);
+        transition: all 0.5s ease;
+        align-items: center;
+        gap: 10px;
+    }
+
+    .success-message.show {
+        display: flex;
+        opacity: 1;
+        transform: scale(1);
+    }
+
+    .success-message i {
+        display: inline-flex;
+        color: #22c55e;
+        font-size: 28px;
+        margin-right: 8px;
+    }
+
+    .magic-eraser-option.active {
+        display: block;
+        opacity: 1;
+        transform: translateY(0);
+    }
+
+    .magic-eraser-tools {
+        display: flex;
+        gap: 1rem;
+        margin-top: 1rem;
+    }
+
+    .tool-btn {
+        flex: 1;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 0.5rem;
+        padding: 0.75rem;
+        background: rgba(255, 255, 255, 0.1);
+        border: none;
+        border-radius: 10px;
+        color: white;
+        font-size: 0.9rem;
+        cursor: pointer;
+        transition: all 0.3s ease;
+    }
+    .tool-btn {
+        background: rgba(255, 255, 255, 0.1);
+        border: none;
+        border-radius: 50%;
+        width: 40px;
+        height: 40px;
+        color: white;
+        cursor: pointer;
+        transition: .3s;
+    }
+
+    .tool-btn:disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+    }
+
+    .steps-counter {
+        font-size: 0.9rem;
+        color: rgba(255, 255, 255, 0.8);
+    }
+
+    .magic-eraser-actions {
+        display: flex;
+        gap: 1rem;
+        justify-content: center;
+    }
+
+    .action-btn {
+        padding: 0.8rem 1.5rem;
+        border: none;
+        border-radius: 8px;
+        cursor: pointer;
+        transition: .3s;
+    }
+    .tool-btn:hover {
+        background: rgba(255, 255, 255, 0.15);
+        transform: translateY(-2px);
+    }
+
+    .continue-btn {
+        margin-top: 2rem;
+        padding: 1rem 2rem;
+        background: #22c55e;
+        border: none;
+        border-radius: 10px;
+        color: white;
+        font-weight: 600;
+        cursor: pointer;
+        opacity: 0;
+        transform: translateY(20px);
+        transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    .continue-btn:disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+        background: #64748b;
+    }
+
+    .continue-btn.active {
+        opacity: 1;
+        transform: translateY(0);
+    }
+
+    .studio-image-container {
+        position: fixed;
+        top: 0;
+        left: 5%;
+        width: 50%;
+        height: 100%;
+        z-index: 4998;
+        opacity: 0;
+        transform: scale(1.1);
+        transition: all 0.8s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    .studio-image-container.visible {
+        opacity: 1;
+        transform: scale(1) translateX(0);
+    }
+
+    .studio-image-container.center {
+        left: 50%;
+        transform: translateX(-50%) scale(1);
+        width: 70%;
+    }
+
+    .studio-image-container img {
+        width: 100%;
+        height: 100%;
+        object-fit: contain;
+    }
+
+    .mode-switcher.fixed-top {
+        position: fixed;
+        top: 18px;
+        left: 46%;
+        transform: translateX(-50%) translateY(-20px);
+        z-index: 6000;
+        background: rgba(20, 20, 30, 0);
+        border-radius: 16px;
+        padding: 8px;
+        display: none;
+        width: 100px;
+        opacity: 0;
+        pointer-events: none;
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    .mode-switcher.fixed-top.visible {
+        opacity: 1;
+        transform: translateX(-50%) translateY(0);
+        pointer-events: auto;
+    }
+</style>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
+
+<!-- Credits display container -->
+<div class="credits-container">
+    <i class="fas fa-coins credits-icon"></i>
+    <div class="credits-value">{{credits}}</div>
+    <div class="credits-label">Credits</div>
+</div>
+
+<!-- Mode switcher in new position -->
+<div class="mode-switcher fixed-top">
+    <label class="mode-switch">
+        <input type="checkbox" id="modeToggle">
+        <span class="slider">
+            <span class="auto-text"><i style="width: 1rem; height: 1rem;" data-lucide="zap"></i>Auto</span>
+            <span class="manual-text"><i style="width: 1rem; height: 1rem;" data-lucide="settings"></i>Manual</span>
+        </span>
+    </label>
+</div>
+
+<div class="nav-trigger-area" id="navTriggerArea"></div>
+<div class="top-nav-bar" id="topNavBar">
+    <div class="nav-left">
+        <a href="/add-creatives/" class="nav-item">
+            <i class="fa-regular fa-image"></i>
+            <span>10X AI Creatives</span>
+        </a>
+        <a href="/add-whatsapp/" class="nav-item">
+            <i class="fa-brands fa-whatsapp"></i>
+            <span>10X WhatsApp</span>
+        </a>
+        <a href="{% url 'search_history' %}" class="nav-item">
+            <i class="fas fa-history"></i>
+            <span>Generation History</span>
+        </a>
+        <a href="{% url 'image_lab' %}" class="nav-item">
+            <i class="fas fa-flask"></i>
+            <span>Image Lab</span>
+        </a>
+    </div>
+    
+    <!-- Add initial hidden state to mode switcher -->
+    <div class="mode-switcher" style="opacity: 0; transition: opacity 0.5s ease;">
+        <label class="mode-switch">
+            <input type="checkbox" id="modeToggle">
+            <span class="slider">
+                <span class="auto-text"><i style="width: 1rem; height: 1rem;" data-lucide="zap"></i>Auto</span>
+                <span class="manual-text"><i style="width: 1rem; height: 1rem;" data-lucide="settings"></i>Manual</span>
+            </span>
+        </label>
+    </div>
+    
+    <a href="/logout/" class="logout-btn" title="Logout">
+        <i style="margin-left: 6px;" class="fas fa-sign-out-alt"></i>
+        <span></span>
+    </a>
+</div>
+
+<div class="studio-container" data-dominant-color="{{ dominant_color }}" data-secondary-color="{{ secondary_color }}" data-accent-color="{{ accent_color }}">
+    <div class="studio-background"></div>
+    <div class="studio-gradient"></div>
+    
+    <div class="image-selection" id="imageSelection">
+        <h1 style="color: white; font-size: 2.5rem; margin: 0 0 1rem;">Image Studio</h1>
+        
+        <div class="selection-option" onclick="showFileInput()">
+            <i data-lucide="upload"></i>
+            <span id="uploadText">Upload Image</span>
+        </div>
+        
+        <div class="selection-option" id="startButton" onclick="startProcess()" style="opacity: 0.5; pointer-events: none;">
+            <i data-lucide="play"></i>
+            Start
+        </div>
+
+        <div class="mode-switcher1">
+            <span class="mode-label">Tool mode</span>
+            <div class="mode-options">
+                <label class="mode-option">
+                    <input type="radio" name="mode" value="auto" checked>
+                    <div class="mode-content">
+                        <i data-lucide="zap" style="color: rgb(240, 100, 0);"></i>
+                        <span>Auto</span>
+                        <small>AI-powered automatic adjustments</small>
+                    </div>
+                </label>
+                <label class="mode-option">
+                    <input type="radio" name="mode" value="manual">
+                    <div class="mode-content">
+                        <i data-lucide="settings" style="color: rgb(240, 100, 0);" ></i>
+                        <span>Manual</span>
+                        <small>Full control over all settings</small>
+                    </div>
+                </label>
+            </div>
+        </div>
+        
+        <input type="file" id="fileInput" style="display: none" accept="image/*" onchange="handleFileSelect(event)">
+    </div>
+
+    <!-- Add initialization page -->
+    <div class="init-page" id="initPage">
+        <div class="init-content">
+            <h2>Initializing Image</h2>
+            
+            <div style="align-items: center;" class="card">
+                <div style="margin-right: -40px;" class="loader"><h1 style="margin-right: 50px;"></h1>
+                    <p style="margin-top: 0px; margin-left: 4px;">Analyzing</p>
+                    <div style="margin-right: -50px;" class="words">
+                        <span class="word">image</span>
+                        <span class="word">background</span>
+                        <span class="word">objects</span>
+                        <span class="word">image</span>
+                    </div>
+                </div>
+                <div style="margin-top: -50px;" class="success-message">
+                    <i class="fas fa-check-circle fa-4x"></i>
+                    <span style="font-size: 20px">Analyzed image elements successfully!</span>
+                </div>
+            </div>
+
+            <div class="magic-eraser-option" id="magicEraserOption">
+                <h3>Would you like to use Magic Eraser?</h3>
+                <p>Fine-tune your image with up to 5 undo/redo steps</p>
+                
+                <div class="magic-eraser-tools">
+                    <button class="tool-btn undo" onclick="undoEdit()" disabled>
+                        <i data-lucide="undo"></i>
+                    </button>
+                    <span class="steps-counter">0/5</span>
+                    <button class="tool-btn redo" onclick="redoEdit()" disabled>
+                        <i data-lucide="redo"></i>
+                    </button>
+                </div>
+
+                <div class="magic-eraser-actions">
+                    <button class="action-btn" onclick="startMagicEraser()">
+                        Use Magic Eraser
+                    </button>
+                    <button class="action-btn" onclick="skipMagicEraser()">
+                        Skip
+                    </button>
+                </div>
+            </div>
+
+            <button class="continue-btn" onclick="continueToTool()" disabled>
+                Continue to Tool
+            </button>
+        </div>
+    </div>
+
+    <div class="library-container" id="libraryContainer">
+        <div class="library-header">
+            <h2>Select Image</h2>
+            <div class="library-close" onclick="hideLibrary()">
+                <i data-lucide="x"></i>
+            </div>
+        </div>
+        <div class="library-grid">
+            {% for image in user_images %}
+            <div class="library-item" onclick="selectImage('{{ image.image.url }}')">
+                <img src="{{ image.image.url }}" alt="Library Image">
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+
+    <div class="image-container" id="imageContainer" style="opacity: 0; pointer-events: none;">
+        <img src="" alt="Studio Image" class="main-image" id="studioImage">
+        <!-- Grid is now drawn directly on the canvas -->
+    </div>
+
+    <div class="controls-background"></div>
+    <div class="controls-container">
+        <div class="step-button" data-step="1">
+            <span class="step-label">Background</span>
+            <i data-lucide="image"></i>
+            <div class="step-progress"></div>
+        </div>
+        <div class="step-button" data-step="2">
+            <span class="step-label">Magic Eraser</span>
+            <i data-lucide="eraser"></i>
+            <div class="step-progress"></div>
+        </div>
+        <div class="step-button" data-step="3">
+            <span class="step-label">Editor</span>
+            <i data-lucide="sliders"></i>
+            <div class="step-progress"></div>
+        </div>
+        <div class="step-button" data-step="4">
+            <span class="step-label">Utils</span>
+            <i data-lucide="wrench"></i>
+            <div class="step-progress"></div>
+        </div>
+        <div class="step-button" data-step="5">
+            <span class="step-label">Save</span>
+            <i data-lucide="download"></i>
+        </div>
+    </div>
+
+    <!-- Tools panels -->
+    <div class="tools-panel" id="backgroundTools">
+        <div class="panel-header">Background Tools</div>
+        <div class="panel-sections-container">
+            <div class="panel-section">
+                <div class="panel-section-title">Background</div>
+                <div class="panel-options-container">
+                    <div class="panel-option">
+                        <i data-lucide="wand"></i>
+                        Generate Background
+                    </div>
+                    <!-- <div class="panel-option">
+                        <i data-lucide="scissors"></i>
+                        Remove Background
+                    </div> -->
+                    <div class="panel-option">
+                        <i data-lucide="image"></i>
+                        Custom Background
+                    </div>
+                </div>
+            </div>
+            <div class="panel-section">
+                <div class="panel-section-title">Advanced</div>
+                <div class="panel-options-container">
+                    <div class="panel-option">
+                        <i data-lucide="eye"></i>
+                        AI Unblur
+                    </div>
+                    <div class="panel-option">
+                        <i data-lucide="glasses"></i>
+                        Reflection Remover
+                    </div>
+                    <div class="panel-option">
+                        <i data-lucide="sparkles"></i>
+                        Noise Reduction
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="tools-panel" id="magicEraserTools">
+        <div class="panel-header">Magic Eraser</div>
+        <div class="panel-sections-container">
+            <div class="panel-section">
+                <div class="panel-options-container">
+                    <div class="panel-option">
+                        <i data-lucide="wand-2"></i>
+                        Smart Lasso
+                    </div>
+                    <div class="panel-option">
+                        <i data-lucide="brush"></i>
+                        Paint Over
+                    </div>
+                    <div class="panel-option">
+                        <i data-lucide="user-minus"></i>
+                        Remove People
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="tools-panel" id="editorTools">
+        <div class="panel-header">Editor</div>
+        <div class="panel-sections-container">
+            <div class="panel-section expanded">
+                <div class="panel-section-header">
+                    <div class="panel-section-title">
+                        <i data-lucide="chevron-right"></i>
+                        Adjustments
+                    </div>
+                </div>
+                <div class="panel-section-content">
+                    <div class="scroll-indicator top">
+                        <i data-lucide="chevron-down"></i>
+                    </div>
+                    <div class="scroll-container">
+                        <div class="panel-option adjustment-slider" data-adjustment="auto"><i data-lucide="wand-2"></i>Auto<div class="slider-container"></div><span class="slider-value">0</span><button class="reset-button">Reset</button></div>
+                        <div class="panel-option adjustment-slider" data-adjustment="exposure"><i data-lucide="sun"></i>Exposure<div class="slider-container"></div><span class="slider-value">0</span><button class="reset-button">Reset</button></div>
+                        <div class="panel-option adjustment-slider" data-adjustment="brilliance"><i data-lucide="sparkles"></i>Brilliance<div class="slider-container"></div><span class="slider-value">0</span><button class="reset-button">Reset</button></div>
+                        <div class="panel-option adjustment-slider" data-adjustment="highlights"><i data-lucide="sun-medium"></i>Highlights<div class="slider-container"></div><span class="slider-value">0</span><button class="reset-button">Reset</button></div>
+                        <div class="panel-option adjustment-slider" data-adjustment="shadows"><i data-lucide="moon"></i>Shadows<div class="slider-container"></div><span class="slider-value">0</span><button class="reset-button">Reset</button></div>
+                        <div class="panel-option adjustment-slider" data-adjustment="contrast"><i data-lucide="circle-dot"></i>Contrast<div class="slider-container"></div><span class="slider-value">0</span><button class="reset-button">Reset</button></div>
+                        <div class="panel-option adjustment-slider" data-adjustment="brightness"><i data-lucide="sun"></i>Brightness<div class="slider-container"></div><span class="slider-value">0</span><button class="reset-button">Reset</button></div>
+                        <div class="panel-option adjustment-slider" data-adjustment="blackpoint"><i data-lucide="circle"></i>Black Point<div class="slider-container"></div><span class="slider-value">0</span><button class="reset-button">Reset</button></div>
+                        <div class="panel-option adjustment-slider" data-adjustment="saturation"><i data-lucide="palette"></i>Saturation<div class="slider-container"></div><span class="slider-value">0</span><button class="reset-button">Reset</button></div>
+                        <div class="panel-option adjustment-slider" data-adjustment="vibrance"><i data-lucide="droplet"></i>Vibrance<div class="slider-container"></div><span class="slider-value">0</span><button class="reset-button">Reset</button></div>
+                        <div class="panel-option adjustment-slider" data-adjustment="temperature"><i data-lucide="thermometer"></i>Temperature<div class="slider-container"></div><span class="slider-value">0</span><button class="reset-button">Reset</button></div>
+                        <div class="panel-option adjustment-slider" data-adjustment="tone"><i data-lucide="wave-sine"></i>Tone<div class="slider-container"></div><span class="slider-value">0</span><button class="reset-button">Reset</button></div>
+                        <div class="panel-option adjustment-slider" data-adjustment="definition"><i data-lucide="line-chart"></i>Definition<div class="slider-container"></div><span class="slider-value">0</span><button class="reset-button">Reset</button></div>
+                    </div>
+                    <div class="scroll-indicator bottom">
+                        <i data-lucide="chevron-down"></i>
+                    </div>
+                </div>
+            </div>
+
+            <div class="panel-section">
+                <div class="panel-section-header">
+                    <div class="panel-section-title">
+                        <i data-lucide="chevron-right"></i>
+                        Filters
+                    </div>
+                </div>
+                <div class="panel-section-content">
+                    <div class="scroll-indicator top">
+                        <i data-lucide="chevron-down"></i>
+                    </div>
+                    <div class="scroll-container">
+                        <div class="filters-grid">
+                            <div class="filter-option" data-filter="original">
+                                <img src="" alt="Original" id="originalFilter">
+                                <div class="filter-name">Original</div>
+                            </div>
+                            <div class="filter-option" data-filter="auto">
+                                <img src="" alt="Auto" id="autoFilter">
+                                <div class="filter-name">Auto</div>
+                            </div>
+                            <div class="filter-option" data-filter="vivid">
+                                <img src="" alt="Vivid" id="vividFilter">
+                                <div class="filter-name">Vivid</div>
+                            </div>
+                            <div class="filter-option" data-filter="warm">
+                                <img src="" alt="Warm" id="warmFilter">
+                                <div class="filter-name">Warm</div>
+                            </div>
+                            <div class="filter-option" data-filter="cool">
+                                <img src="" alt="Cool" id="coolFilter">
+                                <div class="filter-name">Cool</div>
+                            </div>
+                            <div class="filter-option" data-filter="film">
+                                <img src="" alt="Film" id="filmFilter">
+                                <div class="filter-name">Film</div>
+                            </div>
+                            <div class="filter-option" data-filter="blackAndWhite">
+                                <img src="" alt="B&W" id="bwFilter">
+                                <div class="filter-name">B&W</div>
+                            </div>
+                            <div class="filter-option" data-filter="portrait">
+                                <img src="" alt="Portrait" id="portraitFilter">
+                                <div class="filter-name">Portrait</div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="scroll-indicator bottom">
+                        <i data-lucide="chevron-down"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="tools-panel" id="utilsTools">
+        <div class="panel-header">Utils</div>
+        <div class="panel-sections-container">
+            <div class="panel-section">
+                <div class="panel-options-container">
+                    <div class="panel-option">
+                        <i data-lucide="sparkles"></i>
+                        Detail Boost
+                    </div>
+                    <div class="panel-option">
+                        <i data-lucide="maximize"></i>
+                        Upscaler
+                    </div>
+                    <div class="panel-option">
+                        <i data-lucide="copyright"></i>
+                        Watermark
+                    </div>
+                    <div class="panel-option">
+                        <i data-lucide="grid"></i>
+                        Pixelate
+                    </div>
+                    <div class="panel-option">
+                        <i data-lucide="wand-2"></i>
+                        Retouch
+                    </div>
+                    <div class="panel-option">
+                        <i data-lucide="crop"></i>
+                        Crop
+                    </div>
+                    <div class="panel-option">
+                        <i data-lucide="type"></i>
+                        Add Text
+                    </div>
+                    <div class="panel-option">
+                        <i data-lucide="pen"></i>
+                        Markup
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="tools-panel" id="saveTools">
+        <div class="panel-header">Save Options</div>
+        <div class="panel-sections-container">
+            <div class="panel-section">
+                <div class="panel-section-title">Download</div>
+                <div class="panel-options-container">
+                    <div class="panel-option">
+                        <i data-lucide="file-image"></i>
+                        JPEG Format
+                    </div>
+                    <div class="panel-option">
+                        <i data-lucide="file"></i>
+                        Raw Format
+                    </div>
+                    <div class="panel-option">
+                        <i data-lucide="file-archive"></i>
+                        HEIC Format
+                    </div>
+                    <div class="panel-option">
+                        <i data-lucide="file-image"></i>
+                        PNG Format
+                    </div>
+                </div>
+            </div>
+            <div class="panel-section">
+                <div class="panel-section-title">Share</div>
+                <div class="panel-options-container">
+                    <div class="panel-option" onclick="handleShare()">
+                        <i data-lucide="share"></i>
+                        Share to 10X
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Update the zoom-controls div to be initially hidden -->
+    <div class="zoom-controls" style="display: none;">
+        <button class="zoom-btn" onclick="zoomImage(1.1)"><i data-lucide="plus"></i></button>
+        <button class="zoom-btn" onclick="zoomImage(0.9)"><i data-lucide="minus"></i></button>
+        <button class="zoom-btn" onclick="resetZoom()"><i data-lucide="rotate-ccw"></i></button>
+        <button class="zoom-btn" onclick="toggleGrid()" id="gridToggleBtn"><i data-lucide="grid"></i></button>
+    </div>
+</div>
+
+<!-- Replace the generate popup HTML structure -->
+<div class="popup-overlay">
+    <div class="generate-popup">
+        <div class="generate-header">
+            <h3 class="generate-title">Generate Background</h3>
+            <i data-lucide="x" style="cursor: pointer; opacity: 0.7;" onclick="closeGeneratePopup()"></i>
+        </div>
+        
+        <div class="generate-input-group">
+            <input type="text" class="generate-input" placeholder="Describe the background you want to generate...">
+        </div>
+
+        <div class="generate-options">
+            <div class="generate-option active">
+                <i data-lucide="palette"></i>
+                Artistic
+            </div>
+            <div class="generate-option">
+                <i data-lucide="image"></i>
+                Photorealistic
+            </div>
+            <div class="generate-option">
+                <i data-lucide="brush"></i>
+                Abstract
+            </div>
+            <div class="generate-option">
+                <i data-lucide="boxes"></i>
+                3D Render
+            </div>
+        </div>
+
+        <div class="generate-buttons">
+            <button class="generate-button secondary" onclick="closeGeneratePopup()">Cancel</button>
+            <button class="generate-button primary">Generate</button>
+        </div>
+
+        <div class="example-prompts">
+            <div class="example-label">Example prompts</div>
+            <div class="example-chips">
+                <div class="example-chip">Sunset beach</div>
+                <div class="example-chip">Abstract geometry</div>
+                <div class="example-chip">Mountain landscape</div>
+                <div class="example-chip">Studio backdrop</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="popup-overlay" id="customBgOverlay">
+    <div class="custom-bg-popup" style="width: 400px;"> <!-- Adjust width for custom-bg-popup -->
+        <div class="generate-header">
+            <h3 class="generate-title">Custom Background</h3>
+            <i data-lucide="x" style="cursor: pointer; opacity: 0.7;" onclick="closeCustomBgPopup()"></i>
+        </div>
+        
+        <div class="custom-bg-option" onclick="showCustomBgLibrary()">
+            <i data-lucide="images"></i>
+            <div>
+                <div style="font-weight: 500; margin-bottom: 4px;">Select from Library</div>
+                <div style="font-size: 13px; color: rgba(255,255,255,0.6);">Choose from your uploaded images</div>
+            </div>
+        </div>
+
+        <div class="custom-bg-option" onclick="uploadCustomBg()">
+            <i data-lucide="upload"></i>
+            <div>
+                <div style="font-weight: 500; margin-bottom: 4px;">Upload Image</div>
+                <div style="font-size: 13px; color: rgba(255,255,255,0.6);">Upload a new background image</div>
+            </div>
+        </div>
+
+        <input type="file" id="customBgInput" style="display: none" accept="image/*" onchange="handleCustomBgSelect(event)">
+    </div>
+</div>
+
+<!-- Add Text Popup -->
+<div class="popup-overlay" id="addTextOverlay">
+    <div class="generate-popup" style="width: 500px;">
+        <div class="generate-header">
+            <h3 class="generate-title">Add Text</h3>
+            <i data-lucide="x" style="cursor: pointer; opacity: 0.7;" onclick="closeAddTextPopup()"></i>
+        </div>
+        
+        <div class="generate-input-group">
+            <input type="text" class="generate-input" id="textInput" placeholder="Enter your text here...">
+        </div>
+
+        <div class="text-options">
+            <div class="text-option">
+                <label>Font Style</label>
+                <select id="fontStyleSelect" class="text-select">
+                    <option value="Arial, sans-serif" style="font-family: Arial, sans-serif">Arial</option>
+                    <option value="'Times New Roman', serif" style="font-family: 'Times New Roman', serif">Times New Roman</option>
+                    <option value="'Courier New', monospace" style="font-family: 'Courier New', monospace">Courier New</option>
+                    <option value="Georgia, serif" style="font-family: Georgia, serif">Georgia</option>
+                    <option value="Verdana, sans-serif" style="font-family: Verdana, sans-serif">Verdana</option>
+                    <option value="Impact, sans-serif" style="font-family: Impact, sans-serif">Impact</option>
+                    <option value="'Comic Sans MS', cursive" style="font-family: 'Comic Sans MS', cursive">Comic Sans</option>
+                    <option value="'Helvetica Neue', sans-serif" style="font-family: 'Helvetica Neue', sans-serif">Helvetica Neue</option>
+                    <option value="'Segoe UI', sans-serif" style="font-family: 'Segoe UI', sans-serif">Segoe UI</option>
+                    <option value="'Open Sans', sans-serif" style="font-family: 'Open Sans', sans-serif">Open Sans</option>
+                    <option value="'Roboto', sans-serif" style="font-family: 'Roboto', sans-serif">Roboto</option>
+                    <option value="'Lato', sans-serif" style="font-family: 'Lato', sans-serif">Lato</option>
+                    <option value="'Arial Black', sans-serif" style="font-family: 'Arial Black', sans-serif">Arial Black</option>
+                    <option value="'Trebuchet MS', sans-serif" style="font-family: 'Trebuchet MS', sans-serif">Trebuchet MS</option>
+                    <option value="'Palatino Linotype', serif" style="font-family: 'Palatino Linotype', serif">Palatino Linotype</option>
+                    <option value="'Lucida Sans Unicode', sans-serif" style="font-family: 'Lucida Sans Unicode', sans-serif">Lucida Sans Unicode</option>
+                    <option value="'Garamond', serif" style="font-family: 'Garamond', serif">Garamond</option>
+                    <option value="'Book Antiqua', serif" style="font-family: 'Book Antiqua', serif">Book Antiqua</option>
+                    <option value="'Century Gothic', sans-serif" style="font-family: 'Century Gothic', sans-serif">Century Gothic</option>
+                    <option value="'Arial Narrow', sans-serif" style="font-family: 'Arial Narrow', sans-serif">Arial Narrow</option>
+                    <option value="'Franklin Gothic Medium', sans-serif" style="font-family: 'Franklin Gothic Medium', sans-serif">Franklin Gothic Medium</option>
+                    <option value="'Arial Rounded MT Bold', sans-serif" style="font-family: 'Arial Rounded MT Bold', sans-serif">Arial Rounded MT Bold</option>
+                    <option value="'Cambria', serif" style="font-family: 'Cambria', serif">Cambria</option>
+                    <option value="'Segoe Print', sans-serif" style="font-family: 'Segoe Print', sans-serif">Segoe Print</option>
+                    <option value="'Rockwell', serif" style="font-family: 'Rockwell', serif">Rockwell</option>
+                    <option value="'Calibri', sans-serif" style="font-family: 'Calibri', sans-serif">Calibri</option>
+                    <option value="'Tahoma', sans-serif" style="font-family: 'Tahoma', sans-serif">Tahoma</option>
+                    <option value="'Consolas', monospace" style="font-family: 'Consolas', monospace">Consolas</option>
+                    <option value="'Arial Unicode MS', sans-serif" style="font-family: 'Arial Unicode MS', sans-serif">Arial Unicode MS</option>
+                    <option value="'Copperplate Gothic', sans-serif" style="font-family: 'Copperplate Gothic', sans-serif">Copperplate Gothic</option>
+                    <option value="'Bodoni MT', serif" style="font-family: 'Bodoni MT', serif">Bodoni MT</option>
+                    <option value="'Verdana Pro', sans-serif" style="font-family: 'Verdana Pro', sans-serif">Verdana Pro</option>
+                    <option value="'Myriad Pro', sans-serif" style="font-family: 'Myriad Pro', sans-serif">Myriad Pro</option>
+                    <option value="'Futura', sans-serif" style="font-family: 'Futura', sans-serif">Futura</option>
+                    <option value="'Arial Hebrew', sans-serif" style="font-family: 'Arial Hebrew', sans-serif">Arial Hebrew</option>
+                    <option value="'Monotype Corsiva', cursive" style="font-family: 'Monotype Corsiva', cursive">Monotype Corsiva</option>
+                    <option value="'Old English Text MT', serif" style="font-family: 'Old English Text MT', serif">Old English Text MT</option>
+                    <option value="'Brush Script MT', cursive" style="font-family: 'Brush Script MT', cursive">Brush Script MT</option>
+                    <option value="'Mistral', cursive" style="font-family: 'Mistral', cursive">Mistral</option>
+                    <option value="'Segoe Script', cursive" style="font-family: 'Segoe Script', cursive">Segoe Script</option>
+                    <option value="'Lucida Handwriting', cursive" style="font-family: 'Lucida Handwriting', cursive">Lucida Handwriting</option>
+
+                </select>
+            </div>
+            
+            <div class="text-option">
+                <label>Font Size</label>
+                <input type="range" id="fontSizeRange" min="12" max="72" value="24" class="text-range">
+                <span id="fontSizeValue">24px</span>
+            </div>
+            
+            <div class="text-option">
+                <label>Font Color</label>
+                <input type="color" id="fontColorPicker" value="#ffffff" class="text-color-picker">
+            </div>
+        </div>
+        
+        <div class="text-options">
+            <div class="generate-option" id="artisticTextOption">
+                <i data-lucide="brush"></i>
+                Artistic Text
+            </div>
+        </div>
+
+        <div class="generate-buttons">
+            <button class="generate-button secondary" onclick="closeAddTextPopup()">Cancel</button>
+            <button class="generate-button primary" onclick="addTextToImage()">Add Text</button>
+        </div>
+    </div>
+</div>
+
+<script src="https://unpkg.com/lucide@latest"></script>
+<script src="{% static 'image_studio_canvas.js' %}"></script>
+<script>
+    lucide.createIcons();
+</script>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Top navigation bar hover functionality
+    const navTriggerArea = document.getElementById('navTriggerArea');
+    const topNavBar = document.getElementById('topNavBar');
+    const modeSwitcher = document.querySelector('.mode-switcher.fixed-top');
+    let navTimeout;
+
+    // Show mode switcher after a delay
+    setTimeout(() => {
+        modeSwitcher.style.opacity = '1';
+    }, 1000);
+
+    // Show navigation bar when mouse enters trigger area
+    navTriggerArea.addEventListener('mouseenter', function(e) {
+        // Check if mouse entered through the mode switcher area
+        const rect = modeSwitcher.getBoundingClientRect();
+        if (e.clientY < rect.bottom && 
+            e.clientX > rect.left && 
+            e.clientX < rect.right) {
+            return;
+        }
+        
+        clearTimeout(navTimeout);
+        topNavBar.classList.add('visible');
+    });
+
+    // Show navigation bar when mouse hovers over it
+    topNavBar.addEventListener('mouseenter', function() {
+        clearTimeout(navTimeout);
+    });
+
+    // Hide navigation bar when mouse leaves both trigger area and nav bar
+    navTriggerArea.addEventListener('mouseleave', function(e) {
+        // Only start hiding if not moving into the navbar
+        if (e.relatedTarget !== topNavBar && !topNavBar.contains(e.relatedTarget)) {
+            startHideNavTimeout();
+        }
+    });
+
+    // Hide navigation bar when mouse leaves nav bar
+    topNavBar.addEventListener('mouseleave', function() {
+        startHideNavTimeout();
+    });
+
+    function startHideNavTimeout() {
+        navTimeout = setTimeout(function() {
+            topNavBar.classList.remove('visible');
+        }, 500); // Delay before hiding
+    }
+
+    // Show navigation bar initially when page loads
+    setTimeout(function() {
+        topNavBar.classList.add('visible');
+        // Auto-hide after 3 seconds
+        setTimeout(function() {
+            topNavBar.classList.remove('visible');
+        }, 3000);
+    }, 1000);
+    
+    // Font size slider update
+    const fontSizeRange = document.getElementById('fontSizeRange');
+    const fontSizeValue = document.getElementById('fontSizeValue');
+    
+    fontSizeRange.addEventListener('input', function() {
+        fontSizeValue.textContent = this.value + 'px';
+    });
+    
+    // Set up CSS variables for colors
+    const dominantColor = '{{ dominant_color }}';
+    const secondaryColor = '{{ secondary_color }}';
+    const accentColor = '{{ accent_color }}';
+    
+    document.documentElement.style.setProperty('--dominant-color', dominantColor);
+    document.documentElement.style.setProperty('--secondary-color', secondaryColor);
+    document.documentElement.style.setProperty('--accent-color', accentColor);
+
+    // Set up background gradient
+    const gradient = document.querySelector('.studio-gradient');
+    gradient.style.background = `
+        radial-gradient(circle at 30% 30%, 
+            ${dominantColor} 0%,
+            ${secondaryColor} 100%
+        )
+    `;
+
+    // Set up progress bar color
+    const style = document.createElement('style');
+    style.textContent = `
+        .step-progress::after {
+            background: ${accentColor};
+        }
+    `;
+    document.head.appendChild(style);
+
+    const steps = document.querySelectorAll('.step-button');
+    const toolsPanels = document.querySelectorAll('.tools-panel');
+    
+    function createRipple(event) {
+        const container = document.createElement('div');
+        container.className = 'ripple-container';
+        
+        const ripple = document.createElement('div');
+        ripple.className = 'ripple';
+        ripple.style.left = event.clientX + 'px';
+        ripple.style.top = event.clientY + 'px';
+        
+        container.appendChild(ripple);
+        document.body.appendChild(container);
+        
+        ripple.addEventListener('animationend', () => {
+            container.remove();
+        });
+    }
+    
+    steps.forEach((step, index) => {
+        step.addEventListener('click', function(e) {
+            createRipple(e);
+            
+            // Remove all active and completed states
+            steps.forEach((s, i) => {
+                s.classList.remove('active');
+                if (i < index) {
+                    s.classList.add('completed');
+                } else {
+                    s.classList.remove('completed');
+                }
+            });
+            
+            // Add active state to clicked button
+            this.classList.add('active');
+            
+            // Update progress widths based on active step
+            steps.forEach((s, i) => {
+                const progress = s.querySelector('.step-progress');
+                if (progress) {
+                    const activeStepIndex = Array.from(steps).findIndex(step => step.classList.contains('active'));
+                    if (i < activeStepIndex) {
+                        // If this step is before active step and next step is not active,
+                        // set to full width (100px)
+                        const nextStep = steps[i + 1];
+                        if (!nextStep || !nextStep.classList.contains('active')) {
+                            progress.style.width = '100px';
+                        } else {
+                            progress.style.width = '90px';  // Reduced width if next step is active
+                        }
+                    } else if (i === activeStepIndex) {
+                        progress.style.width = 'calc(4.3rem)';  // Active step progress
+                    } else {
+                        progress.style.width = '100px';  // Future steps
+                    }
+                }
+            });
+            
+            // Update tools panel
+            toolsPanels.forEach(panel => panel.classList.remove('active'));
+            const stepNum = this.dataset.step;
+            const toolsPanel = document.getElementById(
+                stepNum === '1' ? 'backgroundTools' :
+                stepNum === '2' ? 'magicEraserTools' :
+                stepNum === '3' ? 'editorTools' :
+                stepNum === '4' ? 'utilsTools' :
+                'saveTools'
+            );
+            toolsPanel.classList.add('active');
+        });
+    });
+
+    // Image zoom and pan functionality
+    const image = document.getElementById('studioImage');
+    const imageContainer = document.getElementById('imageContainer');
+    let scale = 1;
+    let isDragging = false;
+    let startX, startY, translateX = 0, translateY = 0;
+
+    // Add wheel event listener for zoom
+    imageContainer.addEventListener('wheel', (e) => {
+        e.preventDefault();
+        
+        // More precise zoom factor based on deltaY
+        const zoomSensitivity = 0.001;
+        const zoomFactor = 1 + (e.deltaY > 0 ? -zoomSensitivity : zoomSensitivity) * Math.abs(e.deltaY);
+        
+        // Get container center position
+        const rect = imageContainer.getBoundingClientRect();
+        const centerX = rect.width / 2;
+        const centerY = rect.height / 2;
+        
+        // Calculate new scale with smoother transition
+        const oldScale = scale;
+        scale *= zoomFactor;
+        
+        // Limit scale with wider range for more flexibility
+        scale = Math.min(Math.max(scale, 0.05), 20);
+        
+        // Keep image centered during zoom
+        if (scale !== oldScale) {
+            // Apply transform with smoother animation
+            image.style.transition = 'transform 0.1s ease-out';
+            image.style.transform = `translate(-50%, -50%) scale(${scale})`;
+            
+            // Reset transition after zoom
+            setTimeout(() => {
+                image.style.transition = 'none';
+            }, 100);
+        }
+    });
+
+    function initializeImage() {
+        // Reset any existing transforms
+        scale = 1.5;  // Set the scale to 2
+
+        // Set translate values
+        translateX = 0;
+        translateY = 0;
+
+        // Apply transforms and positioning
+        image.style.transform = `translate(-50%, -50%) scale(1.5)`;  // Scale the image
+        image.style.position = 'absolute';
+        image.style.left = '50%';
+        image.style.top = '50%';
+    }
+
+
+    image.onload = initializeImage;
+    
+    window.zoomImage = function(factor) {
+        scale *= factor;
+        image.style.transform = `translate(-50%, -50%) scale(${scale})`;
+        if (window.imageCanvas) {
+            updateCanvasTransform();
+        }
+    }
+
+    window.resetZoom = function() {
+        scale = 1;
+        initializeImage();
+        if (window.imageCanvas) {
+            updateCanvasTransform();
+        }
+    }
+    
+    // Function to toggle grid visibility
+    window.toggleGrid = function() {
+        const gridBtn = document.getElementById('gridToggleBtn');
+        
+        window.gridVisible = !window.gridVisible;
+        
+        if (window.gridVisible) {
+            gridBtn.style.borderColor = 'var(--accent-color)';
+            gridBtn.style.background = 'rgba(245, 158, 11, 0.15)';
+        } else {
+            gridBtn.style.borderColor = 'rgba(255, 255, 255, 0.2)';
+            gridBtn.style.background = 'rgba(255, 255, 255, 0.1)';
+        }
+        
+        // Redraw canvas to show/hide grid
+        if (window.imageCanvas && window.imageCanvasCtx) {
+            drawAllTextElements();
+        }
+    }
+    
+    // Function to update grid size based on zoom level
+    function updateGridSize() {
+        const grid = document.getElementById('imageGrid');
+        const image = document.getElementById('studioImage');
+        
+        if (grid.style.display === 'block' && image) {
+            // Set grid dimensions to match the natural image size
+            grid.style.width = `${image.naturalWidth}px`;
+            grid.style.height = `${image.naturalHeight}px`;
+            
+            // Adjust grid size based on zoom level
+            const gridSize = 50 * scale;
+            grid.style.backgroundSize = `${gridSize}px ${gridSize}px`;
+            
+            // Apply the same transform as the image including translation
+            // This ensures the grid moves in sync with the image
+            grid.style.transform = `translate(-50%, -50%) translate(${translateX}px, ${translateY}px) scale(${scale})`;
+            
+            // Also update canvas transform if it exists
+            if (window.updateCanvasTransform) {
+                window.updateCanvasTransform();
+            }
+        }
+    }
+    
+    // Update grid when zooming
+    imageContainer.addEventListener('wheel', () => {
+        updateGridSize();
+    });
+    
+    // Also update grid when using zoom buttons
+    const originalZoomImage = window.zoomImage;
+    window.zoomImage = function(factor) {
+        originalZoomImage(factor);
+        updateGridSize();
+    }
+
+    imageContainer.addEventListener('mousedown', (e) => {
+        isDragging = true;
+        startX = e.clientX - translateX;
+        startY = e.clientY - translateY;
+    });
+
+    imageContainer.addEventListener('mousemove', (e) => {
+        if (!isDragging) return;
+        
+        // Calculate movement with sensitivity
+        const sensitivity = 1.5;
+        translateX = (e.clientX - startX) * sensitivity;
+        translateY = (e.clientY - startY) * sensitivity;
+        
+        // Update transform to match zoom transform style
+        image.style.transform = `translate(-50%, -50%) translate(${translateX}px, ${translateY}px) scale(${scale})`;
+        
+        // Update grid position simultaneously with the image
+        // This ensures the grid moves in sync with the image without any delay
+        updateGridSize();
+    });
+
+    imageContainer.addEventListener('mouseup', () => {
+        isDragging = false;
+    });
+
+    imageContainer.addEventListener('mouseleave', () => {
+        isDragging = false;
+    });
+
+    window.addEventListener('resize', initializeImage);
+
+    window.showFileInput = function() {
+        document.getElementById('fileInput').click();
+    }
+
+    window.showLibrary = function() {
+        const libraryContainer = document.getElementById('libraryContainer');
+        libraryContainer.classList.add('active');
+    }
+
+    window.hideLibrary = function() {
+        const libraryContainer = document.getElementById('libraryContainer');
+        libraryContainer.classList.remove('active');
+    }
+
+    window.handleFileSelect = function(event) {
+        const file = event.target.files[0];
+        if (file) {
+            // Update upload button text to show file name
+            document.getElementById('uploadText').textContent = file.name;
+            
+            // Store the file data for later use
+            window.selectedFile = file;
+            
+            // Show preview of the selected file
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                const imageUrl = e.target.result;
+                const studioImage = document.getElementById('studioImage');
+                if (studioImage) {
+                    studioImage.src = imageUrl;
+                }
+            };
+            reader.readAsDataURL(file);
+            
+            // Enable the start button
+            const startButton = document.getElementById('startButton');
+            startButton.style.opacity = '1';
+            startButton.style.pointerEvents = 'auto';
+        }
+    }
+    window.selectImage = function(imageUrl) {
+        const studioImage = document.getElementById('studioImage');
+        studioImage.src = imageUrl;
+        
+        // Initialize image once loaded
+        studioImage.onload = function() {
+            initializeImage();
+            updateFilterPreviews(imageUrl);
+        };
+    }
+    function updateFilterPreviews(imageUrl) {
+        const filterImgs = document.querySelectorAll('.filter-option img');
+        filterImgs.forEach(img => {
+            img.src = imageUrl;
+        });
+
+        // Apply CSS filters to previews with more pronounced effects
+        const filters = {
+            '#originalFilter': 'none',
+            '#autoFilter': 'brightness(1.1) contrast(1.1)',
+            '#vividFilter': 'saturate(1.8) contrast(1.3)',
+            '#warmFilter': 'sepia(0.4) saturate(1.4) brightness(1.1)',
+            '#coolFilter': 'saturate(1.1) hue-rotate(-10deg) brightness(1.05)',
+            '#filmFilter': 'contrast(1.2) sepia(0.3) brightness(1.1) saturate(0.9)',
+            '#bwFilter': 'grayscale(1) contrast(1.3) brightness(1.1)',
+            '#portraitFilter': 'brightness(1.15) contrast(1.1) saturate(1.3)'
+        };
+
+        // Apply filters with error handling
+        Object.entries(filters).forEach(([selector, filterValue]) => {
+            const element = document.querySelector(selector);
+            if (element) {
+                element.style.filter = filterValue;
+            }
+        });
+    }
+
+    window.selectImage = function(imageUrl) {
+        const libraryContainer = document.getElementById('libraryContainer');
+        const imageSelection = document.getElementById('imageSelection');
+        const imageContainer = document.getElementById('imageContainer');
+        const controlsContainer = document.querySelector('.controls-container');
+        const controlsBackground = document.querySelector('.controls-background');
+        const studioImage = document.getElementById('studioImage');
+        const zoomControls = document.querySelector('.zoom-controls');
+
+        studioImage.src = imageUrl;
+        
+        // First hide the library with sliding animation
+        libraryContainer.classList.remove('active');
+        
+        // Wait for library to slide down, then fade out selection screen
+        setTimeout(() => {
+            imageSelection.classList.add('hidden');
+            
+            // After selection screen fades out, show the main interface
+            setTimeout(() => {
+                imageContainer.style.opacity = '1';
+                imageContainer.style.pointerEvents = 'auto';
+                controlsContainer.classList.add('visible');
+                controlsBackground.classList.add('visible');
+                zoomControls.style.display = 'flex';
+                initializeImage();
+                updateFilterPreviews(imageUrl);
+                
+                // Initialize canvas if it exists
+                if (window.initializeCanvas) {
+                    window.initializeCanvas();
+                }
+            }, 500); // Wait for selection screen fade out
+        }, 500); // Wait for library slide down
+    }
+    const originalSelectImage = window.selectImage;
+    window.selectImage = function(imageUrl) {
+        originalSelectImage(imageUrl);
+        updateFilterPreviews(imageUrl);
+    }
+
+    window.startProcess = function() {
+        if (!window.selectedFile) return;
+
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            // Load the image
+            const imageUrl = e.target.result;
+            
+            // Create and show background image
+            const studioImageContainer = document.createElement('div');
+            studioImageContainer.className = 'studio-image-container';
+            const img = document.createElement('img');
+            img.src = imageUrl;
+            studioImageContainer.appendChild(img);
+            document.querySelector('.studio-container').appendChild(studioImageContainer);
+            
+            // Hide image selection and show init page
+            const imageSelection = document.getElementById('imageSelection');
+            const initPage = document.getElementById('initPage');
+            
+            // Fade out image selection
+            imageSelection.style.opacity = '0';
+            setTimeout(() => {
+                imageSelection.style.display = 'none';
+                initPage.style.display = 'flex';
+                
+                // Show initialization page and background image
+                setTimeout(() => {
+                    initPage.classList.add('active');
+                    studioImageContainer.classList.add('visible');
+                    startInitialization();
+                }, 100);
+            }, 500);
+        };
+        reader.readAsDataURL(window.selectedFile);
+    }
+
+    async function startProcess() {
+        // Slide out the image selection page
+        const imageSelection = document.getElementById('imageSelection');
+        const initPage = document.getElementById('initPage');
+        const initContent = initPage.querySelector('.init-content');
+        
+        imageSelection.classList.add('slide-out');
+        
+        // Wait for library to slide down, then fade out selection screen
+        setTimeout(() => {
+            initPage.classList.add('active');
+            initContent.classList.add('active');
+            startInitialization();
+        }, 800);
+    }
+
+    async function startInitialization() {
+        const magicEraserOption = document.getElementById('magicEraserOption');
+        const continueBtn = document.querySelector('.continue-btn');
+        
+        // Reset states
+        magicEraserOption.classList.remove('active');
+        continueBtn.classList.remove('active');
+        continueBtn.disabled = true;
+
+        // Start word animation
+        setTimeout(() => {
+            document.querySelector('.word').style.animation = 'spin_4991 4.5s forwards';
+            
+            // Show success message after animation completes
+            setTimeout(() => {
+                // Fade out both the analyzing text and words
+                document.querySelector('.loader p').style.opacity = '0';
+                document.querySelector('.loader p').style.transition = 'opacity 0.5s ease';
+                document.querySelector('.words').style.opacity = '0';
+                document.querySelector('.words').style.transition = 'opacity 0.5s ease';
+                
+                setTimeout(() => {
+                    document.querySelector('.loader p').style.display = 'none';
+                    document.querySelector('.words').style.display = 'none';
+                    document.querySelector('.success-message').classList.add('show');
+                }, 600);
+                
+                // Show magic eraser option after success message
+                magicEraserOption.classList.add('active');
+                continueBtn.classList.add('active');
+                continueBtn.disabled = false;
+            }, 5000);
+        }, 600);
+    }
+
+    function checkTransparency() {
+        const transparencyStep = document.getElementById('transparencyCheck');
+        
+        // Simulate checking process
+        setTimeout(() => {
+            transparencyStep.classList.add('completed');
+            if (!hasTransparency()) {
+                removeBackground();
+            } else {
+                enableMagicEraser();
+            }
+        }, 1500);
+    }
+
+    function hasTransparency() {
+        // Add logic to check if image has transparency
+        return false;
+    }
+
+    function removeBackground() {
+        const removalStep = document.getElementById('backgroundRemoval');
+        
+        // Simulate background removal
+        setTimeout(() => {
+            removalStep.classList.add('completed');
+            enableMagicEraser();
+        }, 2000);
+    }
+
+    function enableMagicEraser() {
+        document.getElementById('magicEraserOption').style.display = 'block';
+        document.querySelector('.continue-btn').disabled = false;
+    }
+
+    let editSteps = 0;
+    const maxSteps = 5;
+
+    function updateStepsCounter() {
+        document.querySelector('.steps-counter').textContent = `${editSteps}/${maxSteps}`;
+    }
+
+    window.undoEdit = function() {
+        if (editSteps > 0) {
+            editSteps--;
+            updateStepsCounter();
+            // Implement undo logic here
+        }
+    }
+
+    window.redoEdit = function() {
+        if (editSteps < maxSteps) {
+            editSteps++;
+            updateStepsCounter();
+            // Implement redo logic here
+        }
+    }
+
+    window.startMagicEraser = function() {
+        // Enable undo/redo buttons
+        document.querySelector('.tool-btn.undo').disabled = false;
+        document.querySelector('.tool-btn.redo').disabled = false;
+        // Implement magic eraser logic here
+    }
+
+    window.skipMagicEraser = function() {
+        continueToTool();
+    }
+
+    window.continueToTool = function() {
+        const initPage = document.getElementById('initPage');
+        const studioContainer = document.querySelector('.studio-container');
+        const studioBackground = document.querySelector('.studio-background');
+        const imageContainer = document.getElementById('imageContainer');
+        const controlsContainer = document.querySelector('.controls-container');
+        const controlsBackground = document.querySelector('.controls-background');
+        const zoomControls = document.querySelector('.zoom-controls');
+        const studioImageContainer = document.querySelector('.studio-image-container');
+
+        // Start the transition
+        initPage.classList.add('slide-out');
+        studioContainer.style.background = 'rgba(15, 23, 42, 0)';
+        
+        // Wait for initial fade out
+        setTimeout(() => {
+            initPage.style.display = 'none';
+            
+            // Show studio elements with transitions
+            studioBackground.classList.add('visible');
+            imageContainer.style.opacity = '0'; // Start with opacity 0
+            imageContainer.style.pointerEvents = 'none'; // Disable interactions initially
+            controlsContainer.classList.add('visible');
+            controlsBackground.classList.add('visible');
+            zoomControls.style.display = 'flex';
+            
+            // Show the mode switcher in the top navbar
+            document.querySelector('.mode-switcher').style.opacity = '1';
+
+            // Move the preview image to match main image position
+            if (studioImageContainer) {
+                studioImageContainer.style.left = '50%';
+                studioImageContainer.style.transform = 'translate(-50%, 0) scale(1)';
+                studioImageContainer.style.width = '75%';
+                studioImageContainer.style.opacity = '1';
+                
+                // First shrink the image significantly
+                setTimeout(() => {
+                    studioImageContainer.style.transform = 'translate(-50%, -50%) scale(1.45)';
+                    studioImageContainer.style.top = '50%';
+                    studioImageContainer.style.transition = 'all 1.2s cubic-bezier(0.4, 0, 0.2, 1)';
+                    
+                    // Then start fading out preview and show main image after 2 seconds
+                    setTimeout(() => {
+                        studioImageContainer.style.opacity = '0';
+                        studioImageContainer.remove(); // Remove immediately without fade
+                        // Show main image with smooth transition
+                        // imageContainer.style.transition = '0.1s ease-in-out';
+                        imageContainer.style.opacity = '1';
+                        imageContainer.style.pointerEvents = 'auto';
+                        
+                        // Initialize canvas after main image is visible
+                        if (window.initializeCanvas) {
+                            window.initializeCanvas();
+                        }
+                        
+                        // Show credits container with animation
+                        setTimeout(() => {
+                            document.querySelector('.credits-container').classList.add('visible');
+                        }, 500); // Small delay for better visual flow
+                    }, 1000); // 2 second delay before showing main image
+                }, 800);
+            }
+
+            // Initialize scroll indicators for all scroll containers
+            document.querySelectorAll('.panel-section-content').forEach(section => {
+                const scrollContainer = section.querySelector('.scroll-container');
+                const topIndicator = section.querySelector('.scroll-indicator.top');
+                const bottomIndicator = section.querySelector('.scroll-indicator.bottom');
+
+                if (scrollContainer && topIndicator && bottomIndicator) {
+                    const updateIndicators = () => {
+                        const showTop = scrollContainer.scrollTop > 20;
+                        const showBottom = scrollContainer.scrollTop < (scrollContainer.scrollHeight - scrollContainer.clientHeight - 20);
+                        topIndicator.style.opacity = showTop ? '1' : '0';
+                        bottomIndicator.style.opacity = showBottom ? '1' : '0';
+                    };
+
+                    scrollContainer.addEventListener('scroll', updateIndicators);
+                    updateIndicators(); // Initial check
+                }
+            });
+
+            // Add panel section expand/collapse functionality
+            document.querySelectorAll('.panel-section-header').forEach(header => {
+                header.addEventListener('click', function() {
+                    const section = this.closest('.panel-section');
+                    section.classList.toggle('expanded');
+                });
+            });
+
+            // Add panel option click handlers
+            document.querySelectorAll('.panel-option').forEach(option => {
+                option.addEventListener('click', function(e) {
+                    // Skip if clicking on reset button
+                    if (e.target.classList.contains('reset-button')) return;
+                    
+                    const text = this.textContent.trim();
+                    
+                    if (text.includes('Generate Background')) {
+                        const popup = document.querySelector('.generate-popup');
+                        const overlay = document.querySelector('.popup-overlay');
+                        overlay.classList.add('active');
+                        popup.classList.add('active');
+                    }
+                    else if (text.includes('Custom Background')) {
+                        const overlay = document.getElementById('customBgOverlay');
+                        const popup = overlay.querySelector('.custom-bg-popup');
+                        overlay.classList.add('active');
+                        popup.classList.add('active');
+                    }
+                    else if (text.includes('Add Text')) {
+                        showAddTextPopup();
+                    }
+                });
+            });
+            
+            // Add adjustment slider functionality
+            document.querySelectorAll('.adjustment-slider').forEach(slider => {
+                let isDragging = false;
+                let currentValue = 0;
+                const sliderContainer = slider.querySelector('.slider-container');
+                const valueDisplay = slider.querySelector('.slider-value');
+                const resetButton = slider.querySelector('.reset-button');
+                
+                // Function to update slider appearance
+                const updateSlider = (value) => {
+                    // Clamp value between -100 and 100
+                    value = Math.max(-100, Math.min(100, value));
+                    currentValue = value;
+                    
+                    // Update slider fill
+                    const fillWidth = Math.abs(value) + '%';
+                    sliderContainer.style.width = fillWidth;
+                    
+                    // Position fill based on positive/negative value
+                    if (value < 0) {
+                        sliderContainer.style.left = 'auto';
+                        sliderContainer.style.right = '0';
+                        sliderContainer.style.backgroundColor = 'rgba(240, 100, 0, 0.2)';
+                    } else {
+                        sliderContainer.style.left = '0';
+                        sliderContainer.style.right = 'auto';
+                        sliderContainer.style.backgroundColor = 'rgba(240, 100, 0, 0.2)';
+                    }
+                    
+                    // Update value display
+                    valueDisplay.textContent = value;
+                    
+                    // Show/hide reset button
+                    if (value !== 0) {
+                        slider.classList.add('has-value');
+                    } else {
+                        slider.classList.remove('has-value');
+                    }
+                };
+                
+                // Mouse down event
+                slider.addEventListener('mousedown', (e) => {
+                    if (e.target.classList.contains('reset-button')) return;
+                    isDragging = true;
+                    slider.style.cursor = 'grabbing';
+                    
+                    // Calculate initial value based on click position
+                    const rect = slider.getBoundingClientRect();
+                    const clickX = e.clientX - rect.left;
+                    const sliderWidth = rect.width;
+                    const percentage = Math.round((clickX / sliderWidth) * 200 - 100);
+                    updateSlider(percentage);
+                    
+                    e.preventDefault(); // Prevent text selection
+                });
+                
+                // Mouse move event (for dragging)
+                document.addEventListener('mousemove', (e) => {
+                    if (!isDragging) return;
+                    
+                    const rect = slider.getBoundingClientRect();
+                    const moveX = e.clientX - rect.left;
+                    const sliderWidth = rect.width;
+                    const percentage = Math.round((moveX / sliderWidth) * 200 - 100);
+                    updateSlider(percentage);
+                });
+                
+                // Mouse up event
+                document.addEventListener('mouseup', () => {
+                    if (isDragging) {
+                        isDragging = false;
+                        slider.style.cursor = 'pointer';
+                    }
+                });
+                
+                // Reset button click
+                resetButton.addEventListener('click', (e) => {
+                    updateSlider(0);
+                    e.stopPropagation(); // Prevent triggering slider click
+                });
+            });
+
+            // Add filter option click handlers
+            document.querySelectorAll('.filter-option').forEach(option => {
+                option.addEventListener('click', function() {
+                    document.querySelectorAll('.filter-option').forEach(opt => 
+                        opt.classList.remove('active')
+                    );
+                    this.classList.add('active');
+                    
+                    const filter = this.dataset.filter;
+                    const mainImage = document.getElementById('studioImage');
+                    
+                    switch(filter) {
+                        case 'original':
+                            mainImage.style.filter = 'none';
+                            break;
+                        case 'auto':
+                            mainImage.style.filter = 'auto';
+                            break;
+                        case 'vivid':
+                            mainImage.style.filter = 'saturate(1.5) contrast(1.2)';
+                            break;
+                        case 'warm':
+                            mainImage.style.filter = 'sepia(0.3) saturate(1.3)';
+                            break;
+                        case 'cool':
+                            mainImage.style.filter = 'saturate(0.8) hue-rotate(10deg)';
+                            break;
+                        case 'film':
+                            mainImage.style.filter = 'contrast(1.1) sepia(0.2) brightness(1.1)';
+                            break;
+                        case 'blackAndWhite':
+                            mainImage.style.filter = 'grayscale(1) contrast(1.2)';
+                            break;
+                        case 'portrait':
+                            mainImage.style.filter = 'brightness(1.1) sepia(0.2) saturate(1.2)';
+                            break;
+                    }
+                });
+            });
+        }, 800);
+
+        // Show and fade in the mode switcher
+        const modeSwitcher = document.querySelector('.mode-switcher.fixed-top');
+        modeSwitcher.style.display = 'block';
+        setTimeout(() => {
+            modeSwitcher.classList.add('visible');
+        }, 1000);
+    }
+});
+
+// Add closeGeneratePopup function
+function closeGeneratePopup() {
+    const overlay = document.querySelector('.popup-overlay');
+    const popup = document.querySelector('.generate-popup');
+    overlay.classList.remove('active');
+    popup.classList.remove('active');
+}
+
+// Add Text Popup Functions
+function showAddTextPopup() {
+    const overlay = document.getElementById('addTextOverlay');
+    const popup = overlay.querySelector('.generate-popup');
+    overlay.classList.add('active');
+    popup.classList.add('active');
+    document.getElementById('textInput').focus();
+}
+
+function closeAddTextPopup() {
+    const overlay = document.getElementById('addTextOverlay');
+    const popup = overlay.querySelector('.generate-popup');
+    overlay.classList.remove('active');
+    popup.classList.remove('active');
+}
+
+function addTextToImage() {
+    // Use the canvas-based text addition function
+    if (window.addTextToCanvas) {
+        window.addTextToCanvas();
+    } else {
+        // Fallback to the original implementation if canvas function is not available
+        const textValue = document.getElementById('textInput').value;
+        if (!textValue) return;
+        
+        const fontStyle = document.getElementById('fontStyleSelect').value;
+        const fontSize = document.getElementById('fontSizeRange').value;
+        const fontColor = document.getElementById('fontColorPicker').value;
+        
+        // Create a draggable text element
+        const textElement = document.createElement('div');
+        textElement.className = 'draggable-text';
+        textElement.textContent = textValue;
+        textElement.style.fontFamily = fontStyle;
+        textElement.style.fontSize = `${fontSize}px`;
+        textElement.style.color = fontColor;
+        
+        // Position the text in the center of the image container
+        const imageContainer = document.querySelector('.image-container');
+        imageContainer.appendChild(textElement);
+        
+        // Center the text initially
+        const rect = textElement.getBoundingClientRect();
+        const containerRect = imageContainer.getBoundingClientRect();
+        
+        textElement.style.left = `${(containerRect.width / 2) - (rect.width / 2)}px`;
+        textElement.style.top = `${(containerRect.height / 2) - (rect.height / 2)}px`;
+        
+        // Make the text draggable
+        makeDraggable(textElement);
+    }
+    
+    // Close the popup
+    closeAddTextPopup();
+}
+
+function makeDraggable(element) {
+    let pos1 = 0, pos2 = 0, pos3 = 0, pos4 = 0;
+    
+    element.onmousedown = dragMouseDown;
+    
+    function dragMouseDown(e) {
+        e = e || window.event;
+        e.preventDefault();
+        // Get the mouse cursor position at startup
+        pos3 = e.clientX;
+        pos4 = e.clientY;
+        document.onmouseup = closeDragElement;
+        // Call a function whenever the cursor moves
+        document.onmousemove = elementDrag;
+    }
+    
+    function elementDrag(e) {
+        e = e || window.event;
+        e.preventDefault();
+        // Calculate the new cursor position
+        pos1 = pos3 - e.clientX;
+        pos2 = pos4 - e.clientY;
+        pos3 = e.clientX;
+        pos4 = e.clientY;
+        // Set the element's new position
+        element.style.top = (element.offsetTop - pos2) + "px";
+        element.style.left = (element.offsetLeft - pos1) + "px";
+    }
+    
+    function closeDragElement() {
+        // Stop moving when mouse button is released
+        document.onmouseup = null;
+        document.onmousemove = null;
+    }
+}
+
+// Custom Background Popup Functions
+function showCustomBgPopup() {
+    document.getElementById('customBgOverlay').classList.add('active');
+    document.querySelector('.custom-bg-popup').classList.add('active');
+}
+
+function closeCustomBgPopup() {
+    document.getElementById('customBgOverlay').classList.remove('active');
+    document.querySelector('.custom-bg-popup').classList.remove('active');
+}
+
+function showCustomBgLibrary() {
+    closeCustomBgPopup();
+    showLibrary();
+}
+
+function uploadCustomBg() {
+    document.getElementById('customBgInput').click();
+}
+
+window.handleCustomBgSelect = function(event) {
+        const file = event.target.files[0];
+        if (file) {
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                // Here you would implement the logic to set this as the background
+                console.log('Custom background selected:', e.target.result);
+                closeCustomBgPopup();
+            };
+            reader.readAsDataURL(file);
+        }
+    }
+</script>
+{% endblock %}
